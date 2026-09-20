@@ -23,6 +23,7 @@ public:
     void move(float delta);
 
     Vector3 getPos() { return m_pos; }
+    void setPos(Vector3 pos) { m_pos = pos; }
 
     Input in;
 

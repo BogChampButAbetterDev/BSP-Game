@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 
+#include "camera.hpp"
 #include "math/geometry.hpp"
 #include "math/vectors.hpp"
 
@@ -13,6 +14,11 @@ struct Map
     std::string name = "";
     Vector3 playerPos = {0, 0, 0};
     std::vector<Wall> walls;
+
+    void onLoad(Camera& cam)
+    {
+        cam.setPos(playerPos);
+    }
 };
 
 enum class ParseState

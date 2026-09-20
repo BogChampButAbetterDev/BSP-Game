@@ -112,6 +112,11 @@ void MapLoader::parseWalls(float value, Map& out)
     {
         Wall wall;
 
+        wall.line.start = { m_pendingNumbers[0], m_pendingNumbers[1] }; // x1 y1
+        wall.line.end   = { m_pendingNumbers[2], m_pendingNumbers[3] }; // x2 y2
+        wall.bottom     = m_pendingNumbers[4];                          // bottom
+        wall.top        = m_pendingNumbers[5];                          // top
+
         out.walls.push_back(wall);
 
         std::cout << "Wall " << out.walls.size() << ": ("

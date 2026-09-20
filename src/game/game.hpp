@@ -31,5 +31,8 @@ private:
 
     Camera m_cam;
 
+    MapLoader m_ml;
+    Map m_map;
+
     void pollEvents();
 };

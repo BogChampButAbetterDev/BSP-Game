@@ -4,6 +4,8 @@
 #include "framebuffer.hpp"
 #include "rasterizer.hpp"
 
+#include "engine/mapLoader.hpp"
+
 class Renderer
 {
 public:
@@ -14,7 +16,7 @@ public:
     }
 
     void beginRender();
-    void renderLoop();
+    void renderMap(const Map& map);
     void endRender();
 
     Framebuffer* getBuf() { return &m_buf; }

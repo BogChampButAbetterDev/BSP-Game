@@ -21,23 +21,27 @@ bool Game::init()
 
     lastTime = SDL_GetTicks();
 
-    MapLoader map("maps/test.lvl");
-    Map m1 = map.read();
-
     return true;
 }
 
 void Game::run()
 {
-    Wall wall 
-    {
-        {{-2, 5}, {2, 5}},
-        5.0f,
-        0.0f
-    };
+    m_ml = MapLoader("maps/test.lvl");
+    m_map = m_ml.read();
 
-    m_cam = Camera({0, 2, 1});
+    m_cam = Camera({0, 0, 0});
+    m_map.onLoad(m_cam);
+
     m_ren.getBuf()->setActiveCamera(&m_cam);
+
+    std::cout << "walls loaded: " << m_map.walls.size() << "\n";
+    if (!m_map.walls.empty())
+    {
+        Wall& w = m_map.walls[0];
+        std::cout << "wall[0]: (" << w.line.start.x << "," << w.line.start.y << ") -> ("
+                << w.line.end.x << "," << w.line.end.y << ") bottom=" << w.bottom << " top=" << w.top << "\n";
+    }
+    std::cout << "cam pos after onLoad: (" << m_cam.getPos().x << ", " << m_cam.getPos().y << ", " << m_cam.getPos().z << ")\n";
 
     while (m_running)
     {
@@ -53,8 +57,7 @@ void Game::run()
         SDL_RenderClear(m_sdlren);
         m_ren.beginRender();
 
-        m_ren.renderLoop();
-        fillWall(m_ren.getBuf(), wall);
+        m_ren.renderMap(m_map);
 
         m_ren.endRender();
         SDL_RenderPresent(m_sdlren);
