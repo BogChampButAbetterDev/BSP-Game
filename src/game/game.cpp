@@ -21,6 +21,9 @@ bool Game::init()
 
     lastTime = SDL_GetTicks();
 
+    MapLoader map("maps/test.lvl");
+    Map m1 = map.read();
+
     return true;
 }
 

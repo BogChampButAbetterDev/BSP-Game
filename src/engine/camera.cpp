@@ -3,6 +3,7 @@
 Camera::Camera(Vector3 pos) 
  : m_pos(pos) 
 {
+    m_pos.y += m_eyeHeight;
 }
 
 Camera::~Camera()

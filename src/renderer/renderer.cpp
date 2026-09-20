@@ -7,7 +7,7 @@ void Renderer::beginRender()
 
 void Renderer::renderLoop()
 {
-    m_buf.setDrawColor(0xFF0000FF);
+    m_buf.setDrawColor(0xFFFFFFFF);
 }
 
 void Renderer::endRender()

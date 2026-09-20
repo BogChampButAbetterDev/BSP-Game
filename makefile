@@ -1,6 +1,8 @@
 CXX = g++
 
-CXXFLAGS = -Wall -g -O0 -std=c++17 -I./src -I/ucrt64/include/SDL3 
+CXXFLAGS = -Wall -g -O0 -std=c++17 -MMD -MP -I./src -I/ucrt64/include/SDL3
+
+DEP = $(OBJ:.o=.d)
 
 SRC = \
 	src/main.cpp \
@@ -21,11 +23,13 @@ all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	mkdir -p bin
-	$(CXX) $(OBJ) -o $(TARGET) $(LIBS) -mconsole
+	$(CXX) $(CXXFLAGS) -static-libasan $(OBJ) -o $(TARGET) $(LIBS) -mconsole
 
 obj/%.o: src/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+-include $(DEP)
 	
 run: all
 	./$(TARGET)

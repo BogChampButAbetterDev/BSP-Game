@@ -4,6 +4,7 @@
 #include "renderer/renderer.hpp"
 #include "engine/camera.hpp"
 #include "engine/input.hpp"
+#include "engine/mapLoader.hpp"
 
 #include "globals/globals.hpp"
 

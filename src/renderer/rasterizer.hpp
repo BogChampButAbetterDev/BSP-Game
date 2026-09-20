@@ -72,7 +72,7 @@ inline void fillConvexPolygon(Framebuffer* buf, const std::vector<Vector2>& vert
 
     for (int y = yStart; y <= yEnd; y++)
     {
-        float yf = y + 0.5f; // sample at pixel center
+        float yf = y + 0.5f; 
         std::vector<float> xs;
 
         for (int i = 0; i < n; i++)

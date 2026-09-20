@@ -39,6 +39,8 @@ private:
     int m_speed = 10;
     float m_rotSpeed = 100.0f;
 
+    float m_eyeHeight = 2.0f;
+
     int m_focalLen = HALF_WID;
     float m_near = 0.01;
 };
