@@ -1,6 +1,6 @@
 #pragma once
 #include <iostream>
-#include <memory>
+#include <algorithm>
 
 #include "engine/input.hpp"
 #include "math/vectors.hpp"
@@ -37,7 +37,7 @@ private:
     float m_yaw = 0.0f;
 
     int m_speed = 10;
-    float m_rotSpeed = 0.8f;
+    float m_rotSpeed = 100.0f;
 
     int m_focalLen = HALF_WID;
     float m_near = 0.01;

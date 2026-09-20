@@ -20,6 +20,8 @@ namespace Platform
         {
             std::cerr << "Window creation failed: " << SDL_GetError() << '\n';
         }
+
+        SDL_SetWindowRelativeMouseMode(window, true);
         return window;
     }
 

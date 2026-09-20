@@ -9,6 +9,13 @@ struct Input
     bool d = false;
     bool arL = false;
     bool arR = false;
+    bool arUp = false;
+    bool arDown = false;
+
+    float mX = 0.0f;
+    float mY = 0.0f;
+    float m_RX = 0.0f;
+    float m_RY = 0.0f;
 };
 
 inline void pollInput(SDL_Event e, Input* in)
@@ -39,6 +46,14 @@ inline void pollInput(SDL_Event e, Input* in)
         {
             in->arR = true;
         }
+        if (e.key.scancode == SDL_SCANCODE_UP)
+        {
+            in->arUp = true;
+        }
+        if (e.key.scancode == SDL_SCANCODE_DOWN)
+        {
+            in->arDown = true;
+        }
     }
     if (e.type == SDL_EVENT_KEY_UP)
     {
@@ -66,5 +81,20 @@ inline void pollInput(SDL_Event e, Input* in)
         {
             in->arR = false;
         }
+        if (e.key.scancode == SDL_SCANCODE_UP)
+        {
+            in->arUp = false;
+        }
+        if (e.key.scancode == SDL_SCANCODE_DOWN)
+        {
+            in->arDown = false;
+        }
+    }
+    if (e.type == SDL_EVENT_MOUSE_MOTION)
+    {
+        in->mX = e.motion.x;
+        in->mY = e.motion.y;
+        in->m_RX = e.motion.xrel;
+        in->m_RY = e.motion.yrel;
     }
 }

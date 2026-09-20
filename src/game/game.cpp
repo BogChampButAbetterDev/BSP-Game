@@ -69,6 +69,11 @@ void Game::pollEvents()
                 break;
         }
 
+        if ((event.type == SDL_EVENT_KEY_DOWN) && (event.key.scancode == SDL_SCANCODE_ESCAPE))
+        {
+            m_running = false;
+        }
+
         pollInput(event, &m_cam.in);
     }
 }
