@@ -34,20 +34,26 @@ void Game::run()
 
     m_ren.getBuf()->setActiveCamera(&m_cam);
 
-    std::cout << "walls loaded: " << m_map.walls.size() << "\n";
-    if (!m_map.walls.empty())
-    {
-        Wall& w = m_map.walls[0];
-        std::cout << "wall[0]: (" << w.line.start.x << "," << w.line.start.y << ") -> ("
-                << w.line.end.x << "," << w.line.end.y << ") bottom=" << w.bottom << " top=" << w.top << "\n";
-    }
-    std::cout << "cam pos after onLoad: (" << m_cam.getPos().x << ", " << m_cam.getPos().y << ", " << m_cam.getPos().z << ")\n";
+    Uint32 frameCount = 0;
+    Uint64 lastFpsUpdateTime = SDL_GetTicks(); 
+    char title_buf[64];
 
     while (m_running)
     {
+        frameCount++;
+
         Uint64 currentTime = SDL_GetTicks();
         delta = (float)(currentTime - lastTime) / 1000.0f;
         lastTime = currentTime;
+
+        if (currentTime - lastFpsUpdateTime >= 1000)
+        {
+            snprintf(title_buf, sizeof(title_buf), "BSP Renderer | FPS: %u", frameCount);
+            SDL_SetWindowTitle(m_win, title_buf);
+
+            frameCount = 0; 
+            lastFpsUpdateTime = currentTime; 
+        }
         
         pollEvents();
 

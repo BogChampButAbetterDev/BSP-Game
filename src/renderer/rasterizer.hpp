@@ -72,29 +72,30 @@ inline void fillConvexPolygon(Framebuffer* buf, const std::vector<Vector2>& vert
 
     for (int y = yStart; y <= yEnd; y++)
     {
-        float yf = y + 0.5f; 
-        std::vector<float> xs;
+        float yf = y + 0.5f;
+        float xs[2];
+        int xsCount = 0;
 
         for (int i = 0; i < n; i++)
         {
             Vector2 a = verts[i];
             Vector2 b = verts[(i + 1) % n];
 
-            if (a.y == b.y) continue; 
+            if (a.y == b.y) continue;
 
             if ((yf >= a.y && yf < b.y) || (yf >= b.y && yf < a.y))
             {
                 float t = (yf - a.y) / (b.y - a.y);
-                xs.push_back(a.x + t * (b.x - a.x));
+                if (xsCount < 2) xs[xsCount++] = a.x + t * (b.x - a.x);
             }
         }
 
-        std::sort(xs.begin(), xs.end());
-
-        for (size_t i = 0; i + 1 < xs.size(); i += 2)
+        if (xsCount == 2)
         {
-            int xStart = std::max(0, (int)std::ceil(xs[i] - 0.5f));
-            int xEnd   = std::min(DEF_WIN_WIDTH - 1, (int)std::floor(xs[i + 1] - 0.5f));
+            if (xs[0] > xs[1]) std::swap(xs[0], xs[1]);
+
+            int xStart = std::max(0, (int)std::ceil(xs[0] - 0.5f));
+            int xEnd   = std::min(DEF_WIN_WIDTH - 1, (int)std::floor(xs[1] - 0.5f));
 
             for (int x = xStart; x <= xEnd; x++)
             {

@@ -1,6 +1,6 @@
 CXX = g++
 
-CXXFLAGS = -Wall -g -O0 -std=c++17 -MMD -MP -I./src -I/ucrt64/include/SDL3
+CXXFLAGS = -Wall -g -O2 -std=c++17 -MMD -MP -I./src -I/ucrt64/include/SDL3
 
 DEP = $(OBJ:.o=.d)
 
