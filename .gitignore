@@ -1,0 +1,32 @@
+# Build folders
+bin/
+obj/
+build/
+
+# Object files
+*.o
+*.obj
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Libraries
+*.a
+*.so
+*.dll
+*.lib
+
+# Debug files
+*.pdb
+
+# VS Code
+.vscode/
+
+# Backgrounds folder is too large and most are unused
+assets/backgrounds/all/
+
+# OS junk
+.DS_Store
+Thumbs.db
