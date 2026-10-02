@@ -114,7 +114,7 @@ inline void fillWall(Framebuffer* buf, Wall wall)
     Vector3 bottomStart = {wall.line.start.x, wall.bottom, wall.line.start.y};
     Vector3 bottomEnd = {wall.line.end.x, wall.bottom, wall.line.end.y};
 
-    const float nearPlane = 0.01f;
+    const float nearPlane = buf->activeCamera->getNear();
 
     if (cam->viewDepth(topStart) < nearPlane    || 
         cam->viewDepth(topEnd) < nearPlane      ||

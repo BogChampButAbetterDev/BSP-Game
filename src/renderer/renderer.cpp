@@ -9,7 +9,7 @@ void Renderer::renderMap(const Map& map)
 {
     m_buf.setDrawColor(0xFFFFFFFF);
 
-    for (const auto w : map.walls)
+    for (const auto& w : map.walls)
     {
         fillWall(&m_buf, w);
     }

@@ -40,7 +40,6 @@ public:
 private:
     std::string mapData = "";
 
-    ParseState m_state = ParseState::None;
     std::vector<float> m_pendingNumbers;
 
     void parseWalls(float value, Map& out);

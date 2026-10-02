@@ -24,6 +24,7 @@ MapLoader::MapLoader(const std::string &filename)
 Map MapLoader::read()
 {
     if (mapData.length() <= 0) return {};
+    ParseState parseState = ParseState::None;
 
     Map out;
 
@@ -45,22 +46,22 @@ Map MapLoader::read()
 
             if (word == "MAP")
             {
-                m_state = ParseState::ExpectMapName;
+                parseState = ParseState::ExpectMapName;
             }
             else if (word == "PLAYER")
             {
-                m_state = ParseState::ExpectPlayerPos;
+                parseState = ParseState::ExpectPlayerPos;
                 m_pendingNumbers.clear();
             }
             else if (word == "WALL")
             {
-                m_state = ParseState::ExpectWallData;
+                parseState = ParseState::ExpectWallData;
                 m_pendingNumbers.clear();
             }
-            else if (m_state == ParseState::ExpectMapName)
+            else if (parseState == ParseState::ExpectMapName)
             {
                 out.name = word;
-                m_state = ParseState::None;
+                parseState = ParseState::None;
             }
             else 
             {
@@ -81,19 +82,28 @@ Map MapLoader::read()
                 i++;
             }
 
-            float value = std::stof(buf.str());
+            float value = 0.0f;
+            try
+            {
+                value = std::stof(buf.str());
+            }
+            catch(const std::exception&)
+            {
+                std::cerr << "Map parse failure due to bad number '" << buf.str() << "' at character '" << i << "\n";
+                return {};
+            }
 
-            if (m_state == ParseState::ExpectPlayerPos)
+            if (parseState == ParseState::ExpectPlayerPos)
             {
                 m_pendingNumbers.push_back(value);
                 if (m_pendingNumbers.size() == 3)
                 {
                     out.playerPos = {m_pendingNumbers[0], m_pendingNumbers[1], m_pendingNumbers[2]};
-                    m_state = ParseState::None;
+                    parseState = ParseState::None;
                     m_pendingNumbers.clear();
                 }
             }
-            if (m_state == ParseState::ExpectWallData)
+            if (parseState == ParseState::ExpectWallData)
             {
                 parseWalls(value, out);
             }

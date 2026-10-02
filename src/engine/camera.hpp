@@ -25,6 +25,8 @@ public:
     Vector3 getPos() { return m_pos; }
     void setPos(Vector3 pos) { m_pos = pos; }
 
+    float getNear() { return m_near; }
+
     Input in;
 
 private:
