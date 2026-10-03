@@ -67,6 +67,7 @@ inline std::vector<Vector3> clipNear(const std::vector<Vector3>& in, float nearZ
 
 inline void drawWall(Framebuffer* buf, Wall wall)
 {
+
     Vector2 aTop = buf->activeCamera->projectPoint({wall.line.start.x, wall.top, wall.line.start.y});
     Vector2 aBottom = buf->activeCamera->projectPoint({wall.line.start.x, wall.bottom, wall.line.start.y});
     Vector2 bTop = buf->activeCamera->projectPoint({wall.line.end.x, wall.top, wall.line.end.y});
@@ -128,6 +129,8 @@ inline void fillConvexPolygon(Framebuffer* buf, std::span<const Vector2> verts)
 inline void fillWall(Framebuffer* buf, Wall wall)
 {
     Camera* cam = buf->activeCamera;
+    Vector2 camXZ = { cam->getPos().x, cam->getPos().z };
+    if (wall.cullWall(camXZ)) return;
 
     Vector3 c_topStart = cam->toCamSpace({wall.line.start.x, wall.top, wall.line.start.y});
     Vector3 c_topEnd = cam->toCamSpace({wall.line.end.x, wall.top, wall.line.end.y});

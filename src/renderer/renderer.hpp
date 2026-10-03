@@ -6,7 +6,7 @@
 
 #include "engine/mapLoader.hpp"
 
-#include "globals/math_utils.hpp"
+#include "globals/color.hpp"
 
 class Renderer
 {

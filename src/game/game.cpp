@@ -26,7 +26,7 @@ bool Game::init()
 
 void Game::run()
 {
-    m_ml = MapLoader("maps/test.lvl");
+    m_ml = MapLoader("maps/L_Room.lvl");
     m_map = m_ml.read();
 
     m_cam = Camera({0, 0, 0});
