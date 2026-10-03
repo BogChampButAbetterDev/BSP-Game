@@ -43,8 +43,8 @@ void Camera::update(float delta)
     if (in.arUp)   { m_pitch -= m_rotSpeed * delta; }
     if (in.arDown) { m_pitch += m_rotSpeed * delta; }
 
-    m_yaw += in.m_RX;
-    m_pitch += in.m_RY;
+    m_yaw += in.m_RX * MOUSE_SENSITIVITY;
+    m_pitch += in.m_RY * MOUSE_SENSITIVITY;
 
     m_pitch = std::clamp(m_pitch, -89.0f, 89.0f);
 

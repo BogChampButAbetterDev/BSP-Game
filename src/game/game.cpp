@@ -63,7 +63,7 @@ void Game::run()
         SDL_RenderClear(m_sdlren);
         m_ren.beginRender();
 
-        m_ren.renderMap(m_map);
+        m_ren.renderMapDBGCLR(m_map);
 
         m_ren.endRender();
         SDL_RenderPresent(m_sdlren);

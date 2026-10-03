@@ -19,6 +19,7 @@ public:
 
     void beginRender();
     void renderMap(const Map& map);
+    void renderMapDBGCLR(const Map& map);
     void endRender();
 
     Framebuffer* getBuf() { return &m_buf; }

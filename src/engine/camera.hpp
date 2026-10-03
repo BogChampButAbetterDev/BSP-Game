@@ -26,7 +26,7 @@ public:
     void move(float delta);
 
     Vector3 getPos() { return m_pos; }
-    void setPos(Vector3 pos) { m_pos = pos; }
+    void setPos(Vector3 pos) { m_pos = pos; m_pos.y += m_eyeHeight; }
 
     float getNear() { return m_near; }
 
@@ -45,8 +45,8 @@ private:
     int m_speed = 10;
     float m_rotSpeed = 100.0f;
 
-    float m_eyeHeight = 2.0f;
+    float m_eyeHeight = 0.7f;
 
     int m_focalLen = HALF_WID;
-    float m_near = 0.01;
+    float m_near = 0.1;
 };

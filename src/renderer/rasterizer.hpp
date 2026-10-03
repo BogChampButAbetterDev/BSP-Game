@@ -1,5 +1,7 @@
 #pragma once
 #include <SDL3/SDL.h>
+#include <array>
+#include <span>
 #include <algorithm>
 
 #include "framebuffer.hpp"
@@ -45,6 +47,24 @@ inline void drawLine(Framebuffer* buf, Vector2 a, Vector2 b)
     }
 }
 
+inline std::vector<Vector3> clipNear(const std::vector<Vector3>& in, float nearZ)
+{
+    std::vector<Vector3> out;
+    for (size_t i = 0; i < in.size(); i++)
+    {
+        Vector3 a = in[i];
+        Vector3 b = in[(i + 1) % in.size()];
+        float da = a.z - nearZ;
+        float db = b.z - nearZ;
+        if (da >= 0) out.push_back(a);
+        if ((da >= 0) != (db >= 0))
+        {
+            out.push_back(a + (b - a) * (da / (da - db)));
+        }
+    }
+    return out;
+}
+
 inline void drawWall(Framebuffer* buf, Wall wall)
 {
     Vector2 aTop = buf->activeCamera->projectPoint({wall.line.start.x, wall.top, wall.line.start.y});
@@ -58,7 +78,7 @@ inline void drawWall(Framebuffer* buf, Wall wall)
     drawLine(buf, bTop, bBottom);
 }
 
-inline void fillConvexPolygon(Framebuffer* buf, const std::vector<Vector2>& verts)
+inline void fillConvexPolygon(Framebuffer* buf, std::span<const Vector2> verts)
 {
     if (verts.size() < 3) return;
 
@@ -109,25 +129,20 @@ inline void fillWall(Framebuffer* buf, Wall wall)
 {
     Camera* cam = buf->activeCamera;
 
-    Vector3 topStart = {wall.line.start.x, wall.top, wall.line.start.y};
-    Vector3 topEnd = {wall.line.end.x, wall.top, wall.line.end.y};
-    Vector3 bottomStart = {wall.line.start.x, wall.bottom, wall.line.start.y};
-    Vector3 bottomEnd = {wall.line.end.x, wall.bottom, wall.line.end.y};
+    Vector3 c_topStart = cam->toCamSpace({wall.line.start.x, wall.top, wall.line.start.y});
+    Vector3 c_topEnd = cam->toCamSpace({wall.line.end.x, wall.top, wall.line.end.y});
+    Vector3 c_bottomStart = cam->toCamSpace({wall.line.start.x, wall.bottom, wall.line.start.y});
+    Vector3 c_bottomEnd = cam->toCamSpace({wall.line.end.x, wall.bottom, wall.line.end.y});
 
-    const float nearPlane = buf->activeCamera->getNear();
+    const float nearPlane = cam->getNear();
 
-    if (cam->viewDepth(topStart) < nearPlane    || 
-        cam->viewDepth(topEnd) < nearPlane      ||
-        cam->viewDepth(bottomStart) < nearPlane ||
-        cam->viewDepth(bottomEnd) < nearPlane)
+    std::vector<Vector3> verts = clipNear({c_topStart, c_topEnd, c_bottomEnd, c_bottomStart}, nearPlane);
+    if (verts.size() < 3) return;
+    std::array<Vector2, 8> vertsProj;
+    for (size_t i = 0; i < verts.size(); i++)
     {
-        return;
+        vertsProj[i] = cam->projectCamSpace(verts[i]);
     }
 
-    Vector2 aTop = cam->projectPoint(topStart);
-    Vector2 aBottom = cam->projectPoint(bottomStart);
-    Vector2 bTop = cam->projectPoint(topEnd);
-    Vector2 bBottom = cam->projectPoint(bottomEnd);
-
-    fillConvexPolygon(buf, {aTop, bTop, bBottom, aBottom});
+    fillConvexPolygon(buf, std::span<const Vector2>(vertsProj.data(), verts.size()));
 }
