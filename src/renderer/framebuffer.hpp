@@ -6,6 +6,7 @@
 #include "engine/camera.hpp"
 
 #include "globals/globals.hpp"
+#include "globals/math_utils.hpp"
 
 struct Framebuffer
 {   
@@ -14,7 +15,7 @@ struct Framebuffer
 
     Camera* activeCamera = nullptr;
 
-    uint32_t current_color = 0x000000FF;
+    uint32_t current_color = rgb(0x00, 0x00, 0x00);
 
     Framebuffer() {}
 

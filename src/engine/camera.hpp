@@ -16,8 +16,11 @@ public:
 
     ~Camera();
 
-    Vector2 projectPoint(Vector3 point);
-    float viewDepth(Vector3 point);
+    Vector3 toCamSpace(Vector3 p) const;
+    Vector2 projectCamSpace(Vector3 c) const;
+
+    Vector2 projectPoint(Vector3 point) const { return projectCamSpace(toCamSpace(point)); }
+    float viewDepth(Vector3 point) const { return toCamSpace(point).z; }
 
     void update(float delta);
     void move(float delta);

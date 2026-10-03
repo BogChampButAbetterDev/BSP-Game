@@ -10,41 +10,24 @@ Camera::~Camera()
 {
 }
 
-Vector2 Camera::projectPoint(Vector3 point)
+Vector3 Camera::toCamSpace(Vector3 p) const
 {
-    float relX = point.x - m_pos.x;
-    float relY = point.y - m_pos.y;
-    float relZ = point.z - m_pos.z;
-
-    float yawRad = deg2rad(m_yaw);
-    float pitchRad = -deg2rad(m_pitch);
-
-    float rotatedX = relX * cosf(yawRad) - relZ * sinf(yawRad);
-    float yawZ = relX * sinf(yawRad) + relZ * cosf(yawRad);
-
-    float rotatedY = relY * cosf(pitchRad) - yawZ * sinf(pitchRad);
-    float rotatedZ = relY * sinf(pitchRad) + yawZ * cosf(pitchRad);
-
-    float scrX = HALF_WID + ((rotatedX / rotatedZ) * m_focalLen);
-    float scrY = HALF_HT - ((rotatedY / rotatedZ) * m_focalLen);
-
-    return {scrX, scrY};
+    float rx = p.x - m_pos.x, ry = p.y - m_pos.y, rz = p.z - m_pos.z;
+    float yaw = deg2rad(m_yaw);
+    float pitch = -deg2rad(m_pitch);
+    float cy = cosf(yaw), sy = sinf(yaw), cp = cosf(pitch), sp = sinf(pitch);
+    float x  = rx * cy - rz * sy;
+    float yz = rx * sy + rz * cy;
+    return { x, ry * cp - yz * sp, ry * sp + yz * cp };
 }
 
-float Camera::viewDepth(Vector3 point)
+Vector2 Camera::projectCamSpace(Vector3 c) const
 {
-    float relX = point.x - m_pos.x;
-    float relY = point.y - m_pos.y;
-    float relZ = point.z - m_pos.z;
-
-    float yawRad = deg2rad(m_yaw);
-    float pitchRad = -deg2rad(m_pitch);
-
-    float yawZ = relX * sinf(yawRad) + relZ * cosf(yawRad);
-    
-    float rotatedZ = relY * sinf(pitchRad) + yawZ * cosf(pitchRad);
-
-    return rotatedZ;
+    return 
+    {
+        HALF_WID + (c.x / c.z) * m_focalLen,
+        HALF_HT  - (c.y / c.z) * m_focalLen
+    };
 }
 
 void Camera::update(float delta)

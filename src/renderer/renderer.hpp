@@ -6,6 +6,8 @@
 
 #include "engine/mapLoader.hpp"
 
+#include "globals/math_utils.hpp"
+
 class Renderer
 {
 public:
