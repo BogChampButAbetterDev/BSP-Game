@@ -6,7 +6,17 @@
 #include "engine/input.hpp"
 #include "engine/mapLoader.hpp"
 
+#include "engine/bsp/bsp_build.hpp"
+
 #include "globals/globals.hpp"
+
+enum class GAME_STATE
+{
+    NONE,
+    DEBUG,
+    PLAY,
+    PLAY_DEBUG
+};
 
 class Game
 {
@@ -33,6 +43,8 @@ private:
 
     MapLoader m_ml;
     Map m_map;
+
+    GAME_STATE m_state = GAME_STATE::NONE;
 
     void pollEvents();
 };

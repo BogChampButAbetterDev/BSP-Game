@@ -24,6 +24,11 @@ void Renderer::renderMapDBGCLR(const Map& map)
     }
 }
 
+void Renderer::render2DView(const Map &map)
+{
+    DebugView::render(&m_buf, map.walls);
+}
+
 void Renderer::endRender()
 {
     m_buf.present(m_ren);

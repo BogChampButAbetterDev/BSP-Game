@@ -25,10 +25,11 @@ public:
     void update(float delta);
     void move(float delta);
 
-    Vector3 getPos() { return m_pos; }
+    Vector3 getPos() const { return m_pos; }
     void setPos(Vector3 pos) { m_pos = pos; m_pos.y += m_eyeHeight; }
 
-    float getNear() { return m_near; }
+    float getNear() const { return m_near; }
+    float getYaw() const { return m_yaw; }
 
     Input in;
 

@@ -7,6 +7,7 @@ DEP = $(OBJ:.o=.d)
 SRC = \
 	src/main.cpp \
 	$(wildcard src/engine/*.cpp) \
+	$(wildcard src/engine/bsp/*.cpp) \
 	$(wildcard src/renderer/*.cpp) \
 	$(wildcard src/game/*.cpp) \
 	$(wildcard src/engine/math/*.cpp) \

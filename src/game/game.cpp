@@ -38,6 +38,10 @@ void Game::run()
     Uint64 lastFpsUpdateTime = SDL_GetTicks(); 
     char title_buf[64];
 
+    m_state = GAME_STATE::PLAY;
+
+    buildBSP(m_map.walls);
+
     while (m_running)
     {
         frameCount++;
@@ -63,7 +67,12 @@ void Game::run()
         SDL_RenderClear(m_sdlren);
         m_ren.beginRender();
 
-        m_ren.renderMapDBGCLR(m_map);
+        if (m_state == GAME_STATE::PLAY_DEBUG)
+            m_ren.renderMapDBGCLR(m_map);
+        else if (m_state == GAME_STATE::DEBUG)
+            m_ren.render2DView(m_map);
+        else
+            m_ren.renderMap(m_map);
 
         m_ren.endRender();
         SDL_RenderPresent(m_sdlren);
@@ -84,6 +93,18 @@ void Game::pollEvents()
         if ((event.type == SDL_EVENT_KEY_DOWN) && (event.key.scancode == SDL_SCANCODE_ESCAPE))
         {
             m_running = false;
+        }
+        if ((event.type == SDL_EVENT_KEY_DOWN) && (event.key.scancode == SDL_SCANCODE_1))
+        {
+            m_state = GAME_STATE::PLAY_DEBUG;
+        }
+        if ((event.type == SDL_EVENT_KEY_DOWN) && (event.key.scancode == SDL_SCANCODE_2))
+        {
+            m_state = GAME_STATE::DEBUG;
+        }
+        if ((event.type == SDL_EVENT_KEY_DOWN) && (event.key.scancode == SDL_SCANCODE_3))
+        {
+            m_state = GAME_STATE::PLAY;
         }
 
         pollInput(event, &m_cam.in);
