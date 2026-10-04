@@ -33,6 +33,12 @@ void Game::run()
     m_cam = Camera({0, 0, 0});
     m_map.onLoad(m_cam);
 
+    DirectionalLight light =
+    {
+        .dir = {0.8f, 0.3f, 0.5f}
+    };
+    m_ren.regLight(light);
+
     m_ren.getBuf()->setActiveCamera(&m_cam);
 
     Uint32 frameCount = 0;

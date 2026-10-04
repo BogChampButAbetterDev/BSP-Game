@@ -6,11 +6,12 @@
 
 #include "framebuffer.hpp"
 #include "rasterizer.hpp"
+#include "debug_view.hpp"
 
 #include "bsp/bsp_traverse.hpp"
 #include "engine/mapLoader.hpp"
-#include "debug_view.hpp"
 #include "globals/color.hpp"
+#include "engine/lighting.hpp"
 
 class Renderer
 {
@@ -20,6 +21,8 @@ public:
     {
         m_buf.create(m_ren);
     }
+
+    void regLight(const DirectionalLight& light) { m_light = light; m_light.dir = m_light.dir.normalized();}
 
     void beginRender();
     void renderMap(const Map& map);
@@ -34,4 +37,6 @@ private:
     Framebuffer m_buf;
 
     std::unique_ptr<std::vector<Wall>> m_renOrder = std::make_unique<std::vector<Wall>>();
+
+    DirectionalLight m_light;
 };

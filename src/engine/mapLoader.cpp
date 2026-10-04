@@ -127,6 +127,8 @@ void MapLoader::parseWalls(float value, Map& out)
         wall.bottom     = m_pendingNumbers[4];                          // bottom
         wall.top        = m_pendingNumbers[5];                          // top
 
+        wall.computeNormal();
+
         out.walls.push_back(wall);
         m_pendingNumbers.clear();
     }

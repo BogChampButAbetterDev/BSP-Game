@@ -129,8 +129,6 @@ inline void fillConvexPolygon(Framebuffer* buf, std::span<const Vector2> verts)
 inline void fillWall(Framebuffer* buf, Wall wall)
 {
     Camera* cam = buf->activeCamera;
-    Vector2 camXZ = { cam->getPos().x, cam->getPos().z };
-    if (wall.cullWall(camXZ)) return;
 
     Vector3 c_topStart = cam->toCamSpace({wall.line.start.x, wall.top, wall.line.start.y});
     Vector3 c_topEnd = cam->toCamSpace({wall.line.end.x, wall.top, wall.line.end.y});

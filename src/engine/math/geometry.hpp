@@ -23,7 +23,15 @@ struct Wall
     float top = 0.0f;
     float bottom = 0.0f;
 
+    Vector2 normal;
+
     bool cullWall(Vector2 p) const { return line.sideOf(p) <= 0; }
+    void computeNormal() 
+    {
+        Vector2 d = line.end - line.start;
+        Vector2 perp = {-d.y, d.x};
+        normal = perp.normalized();
+    }
 };
 
 enum class Side {FRONT, BACK, COPLANAR, SPANNING};
