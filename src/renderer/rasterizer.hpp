@@ -143,7 +143,7 @@ inline void fillWall(Framebuffer* buf, Wall wall)
     if (verts.size() < 3) return;
     std::array<Vector2, 8> vertsProj;
     for (size_t i = 0; i < verts.size(); i++)
-    {
+    {  
         vertsProj[i] = cam->projectCamSpace(verts[i]);
     }
 

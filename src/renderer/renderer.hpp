@@ -1,13 +1,15 @@
 #pragma once
+#include <iostream>
+#include <vector>
+#include <memory>
 #include <SDL3/SDL.h>
 
 #include "framebuffer.hpp"
 #include "rasterizer.hpp"
 
+#include "bsp/bsp_traverse.hpp"
 #include "engine/mapLoader.hpp"
-
 #include "debug_view.hpp"
-
 #include "globals/color.hpp"
 
 class Renderer
@@ -30,4 +32,6 @@ public:
 private:
     SDL_Renderer* m_ren = nullptr;
     Framebuffer m_buf;
+
+    std::unique_ptr<std::vector<Wall>> m_renOrder = std::make_unique<std::vector<Wall>>();
 };

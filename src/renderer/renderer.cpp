@@ -7,20 +7,30 @@ void Renderer::beginRender()
 
 void Renderer::renderMap(const Map& map)
 {
-    m_buf.setDrawColor(rgb(0xFF, 0xFF, 0xFF));
+    Vector2 camFloorPos = {m_buf.activeCamera->getPos().x, m_buf.activeCamera->getPos().z};
+    m_renOrder->clear();
 
-    for (const auto& w : map.walls)
+    BSPTraverse(map.tree, map.tree.root, camFloorPos, *m_renOrder);
+    for (const Wall& w : (*m_renOrder))
     {
+        if (w.cullWall(camFloorPos)) continue;
+        m_buf.setDrawColor(rgb(165, 182, 127));
         fillWall(&m_buf, w);
     }
 }
 
 void Renderer::renderMapDBGCLR(const Map& map)
 {
-    for (size_t i = 0; i < map.walls.size(); i++)
+    Vector2 camFloorPos = {m_buf.activeCamera->getPos().x, m_buf.activeCamera->getPos().z};
+
+    m_renOrder->clear();
+
+    BSPTraverse(map.tree, map.tree.root, camFloorPos, *m_renOrder);
+    for (size_t i = 0; i < m_renOrder->size(); i++)
     {
+        if ((*m_renOrder)[i].cullWall(camFloorPos)) continue;
         m_buf.setDrawColor(debugColor(i));
-        fillWall(&m_buf, map.walls[i]);
+        fillWall(&m_buf, (*m_renOrder)[i]);
     }
 }
 

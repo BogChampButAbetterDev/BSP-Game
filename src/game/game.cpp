@@ -28,6 +28,7 @@ void Game::run()
 {
     m_ml = MapLoader("maps/L_Room.lvl");
     m_map = m_ml.read();
+    m_map.tree = buildBSP(m_map.walls);
 
     m_cam = Camera({0, 0, 0});
     m_map.onLoad(m_cam);
@@ -39,8 +40,6 @@ void Game::run()
     char title_buf[64];
 
     m_state = GAME_STATE::PLAY;
-
-    buildBSP(m_map.walls);
 
     while (m_running)
     {

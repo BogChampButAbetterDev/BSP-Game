@@ -9,11 +9,15 @@
 #include "math/geometry.hpp"
 #include "math/vectors.hpp"
 
+#include "bsp/bsp.hpp"
+
 struct Map
 {
     std::string name = "";
     Vector3 playerPos = {0, 0, 0};
     std::vector<Wall> walls;
+
+    BSPTree tree;
 
     void onLoad(Camera& cam)
     {

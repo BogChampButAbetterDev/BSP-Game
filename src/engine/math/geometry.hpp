@@ -23,7 +23,7 @@ struct Wall
     float top = 0.0f;
     float bottom = 0.0f;
 
-    bool cullWall(Vector2 p) { return line.sideOf(p) <= 0; }
+    bool cullWall(Vector2 p) const { return line.sideOf(p) <= 0; }
 };
 
 enum class Side {FRONT, BACK, COPLANAR, SPANNING};
