@@ -21,10 +21,5 @@ inline float shade(Vector2 normal, DirectionalLight light)
 
 inline uint32_t applyLighting(uint32_t baseColor, const DirectionalLight& light, const Wall& wall)
 {
-    Color base = unpackRGB(baseColor);
-    float s = shade(wall.normal, light);
-    uint8_t r = (uint8_t)std::min(255.0f, base.r * s);
-    uint8_t g = (uint8_t)std::min(255.0f, base.g * s);
-    uint8_t b = (uint8_t)std::min(255.0f, base.b * s);
-    return rgb(r, g, b);
+    return scaleColor(baseColor, shade(wall.normal, light));
 }

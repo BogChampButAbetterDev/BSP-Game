@@ -50,6 +50,16 @@ struct Framebuffer
         pixels[y * DEF_WIN_WIDTH + x] = current_color;
     }
 
+    void setPixelColor(int x, int y, uint32_t color)
+    {
+        if (x < 0 || x >= DEF_WIN_WIDTH || y < 0 || y >= DEF_WIN_HEIGHT)
+        {
+            return;
+        }
+
+        pixels[y * DEF_WIN_WIDTH + x] = color;
+    }
+
     void present(SDL_Renderer* ren)
     {
         SDL_UpdateTexture(tex, nullptr, pixels.data(), DEF_WIN_WIDTH * sizeof(uint32_t));

@@ -16,6 +16,8 @@ struct Map
     std::string name = "";
     Vector3 playerPos = {0, 0, 0};
     std::vector<Wall> walls;
+    
+    std::vector<std::string> texturePaths;
 
     BSPTree tree;
 
@@ -46,5 +48,5 @@ private:
 
     std::vector<float> m_pendingNumbers;
 
-    void parseWalls(float value, Map& out);
+    void parseWalls(float value, Map& out, int texId);
 };

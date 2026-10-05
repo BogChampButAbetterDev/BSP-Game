@@ -1,5 +1,19 @@
 #include "mapLoader.hpp"
 
+namespace
+{
+    int textureIndex(Map& map, const std::string& path)
+    {
+        for (size_t i = 0; i < map.texturePaths.size(); i++)
+        {
+            if (map.texturePaths[i] == path) return (int)i;
+        }
+
+        map.texturePaths.push_back(path);
+        return (int)map.texturePaths.size() - 1;
+    }
+}
+
 MapLoader::MapLoader(const std::string &filename)
 {
     std::ifstream file(filename);
@@ -25,6 +39,7 @@ Map MapLoader::read()
 {
     if (mapData.length() <= 0) return {};
     ParseState parseState = ParseState::None;
+    int currentTexture = -1;   // -1 = no TEXTURE line seen yet (flat color)
 
     Map out;
 
@@ -57,6 +72,27 @@ Map MapLoader::read()
             {
                 parseState = ParseState::ExpectWallData;
                 m_pendingNumbers.clear();
+            }
+            else if (word == "TEXTURE")
+            {
+                parseState = ParseState::None;
+                m_pendingNumbers.clear();
+
+                while (i < mapData.length() && (mapData[i] == ' ' || mapData[i] == '\t')) { i++; }
+
+                size_t pathStart = i;
+                while (i < mapData.length() && mapData[i] != '\n' && mapData[i] != '\r') { i++; }
+
+                std::string path = mapData.substr(pathStart, i - pathStart);
+                while (!path.empty() && (path.back() == ' ' || path.back() == '\t')) { path.pop_back(); }
+
+                if (path.empty())
+                {
+                    std::cerr << "Map parse failure: TEXTURE with no path\n";
+                    return {};
+                }
+
+                currentTexture = textureIndex(out, path);
             }
             else if (parseState == ParseState::ExpectMapName)
             {
@@ -105,7 +141,7 @@ Map MapLoader::read()
             }
             if (parseState == ParseState::ExpectWallData)
             {
-                parseWalls(value, out);
+                parseWalls(value, out, currentTexture);
             }
 
             i--;
@@ -115,7 +151,7 @@ Map MapLoader::read()
     return out;
 }
 
-void MapLoader::parseWalls(float value, Map& out)
+void MapLoader::parseWalls(float value, Map& out, int texId)
 {
     m_pendingNumbers.push_back(value);
     if (m_pendingNumbers.size() == 6)
@@ -126,8 +162,11 @@ void MapLoader::parseWalls(float value, Map& out)
         wall.line.end   = { m_pendingNumbers[2], m_pendingNumbers[3] }; // x2 y2
         wall.bottom     = m_pendingNumbers[4];                          // bottom
         wall.top        = m_pendingNumbers[5];                          // top
+        wall.texId      = texId;                                        // index into Map::texturePaths, -1 = none
 
         wall.computeNormal();
+        wall.UStart = wall.line.length() / TEX_WORLD_H;
+        wall.UEnd = 0.0f;
 
         out.walls.push_back(wall);
         m_pendingNumbers.clear();

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <algorithm>
 
 struct Color
 {
@@ -26,4 +27,15 @@ constexpr Color unpackRGB(uint32_t color)
 inline uint32_t debugColor(int i)
 {
     return rgb(60 + (i * 37) % 195, 60 + (i * 71) % 195, 60 + (i * 113) % 195);
+}
+
+inline uint32_t scaleColor(uint32_t color, float s)
+{
+    Color c = unpackRGB(color);
+
+    uint8_t r = (uint8_t)std::clamp(c.r * s, 0.0f, 255.0f);
+    uint8_t g = (uint8_t)std::clamp(c.g * s, 0.0f, 255.0f);
+    uint8_t b = (uint8_t)std::clamp(c.b * s, 0.0f, 255.0f);
+
+    return rgb(r, g, b);
 }
