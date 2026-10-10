@@ -14,4 +14,4 @@ TEXTURE assets/Textures/Stone_bricks.png
 WALL   2  3    2  5    0 10
 WALL   2  5    4  5    0 10
 WALL   4  5    4  3    0 10
-WALL   4  3    2  3    0 3
+WALL   4  3    2  3    0 10

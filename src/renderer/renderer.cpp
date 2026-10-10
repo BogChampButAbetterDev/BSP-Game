@@ -1,6 +1,6 @@
 #include "renderer.hpp"
 
-void Renderer::loadTextures(const std::vector<std::string> &paths)
+void Renderer::loadTextures(const std::vector<std::string>& paths)
 {
     for (const std::string& p : paths)
     {
@@ -14,6 +14,7 @@ void Renderer::loadTextures(const std::vector<std::string> &paths)
             tex.pixels.resize(tex.width * tex.height);
             tex.genChecker();
             m_textures.push_back(tex);
+            continue;
         }
 
         SDL_Surface* converted = SDL_ConvertSurface(loaded, SDL_PIXELFORMAT_ABGR8888);

@@ -1,0 +1,88 @@
+MAP Keep
+
+PLAYER 0 1.5 3
+
+SECTOR 0 5 0.7
+SECTOR 0 3.5 0.45
+SECTOR 0 8 0.9
+SECTOR 1 8 1.0
+SECTOR 0.5 8 0.95
+SECTOR 0 4 0.6
+SECTOR 0 3 0.5
+SECTOR 0.5 6 0.55
+SECTOR 0 3 0.5
+SECTOR 1 4 0.7
+
+TEXTURE assets/Textures/Stone_bricks.png
+WALL -6 0 6 0 0 -1
+WALL 6 0 6 10 0 -1
+WALL 6 10 2 10 0 -1
+WALL 2 10 -2 10 0 1
+WALL -2 10 -6 10 0 -1
+WALL -6 10 -6 0 0 -1
+
+TEXTURE assets/Textures/Stone slabs.png
+WALL 2 10 2 22 1 -1
+WALL -2 22 -2 10 1 -1
+
+TEXTURE assets/Textures/Bricks.png
+WALL -12 22 -2 22 2 -1
+WALL -2 22 2 22 2 1
+WALL 2 22 12 22 2 -1
+WALL 12 22 12 32 2 -1
+WALL 12 32 12 36 2 8
+WALL 12 36 12 46 2 -1
+WALL 12 46 5 46 2 -1
+WALL -5 46 -12 46 2 -1
+WALL -12 46 -12 36 2 -1
+WALL -12 36 -12 32 2 6
+WALL -12 32 -12 22 2 -1
+
+TEXTURE assets/Textures/Stone slabs.png
+WALL 5 46 5 40 2 3
+WALL 5 40 5 37 2 4
+WALL 5 37 -5 37 2 4
+WALL -5 37 -5 40 2 4
+WALL -5 40 -5 46 2 3
+WALL -5 40 5 40 3 4
+
+TEXTURE assets/Textures/Crystal.png
+WALL 5 46 -5 46 3 -1
+
+TEXTURE assets/Textures/Stone_bricks.png
+WALL -8 28 -8 30 2 -1
+WALL -8 30 -6 30 2 -1
+WALL -6 30 -6 28 2 -1
+WALL -6 28 -8 28 2 -1
+WALL 6 28 6 30 2 -1
+WALL 6 30 8 30 2 -1
+WALL 8 30 8 28 2 -1
+WALL 8 28 6 28 2 -1
+WALL -12 36 -14 36 6 -1
+WALL -14 32 -12 32 6 -1
+
+TEXTURE assets/Textures/Wood planks.png
+WALL -24 27 -14 27 5 -1
+WALL -14 27 -14 32 5 -1
+WALL -14 32 -14 36 5 6
+WALL -14 36 -14 41 5 -1
+WALL -14 41 -24 41 5 -1
+WALL -24 41 -24 27 5 -1
+
+TEXTURE assets/Textures/Bark.png
+WALL -20 31 -20 34 5 9
+WALL -20 34 -17 34 5 9
+WALL -17 34 -17 31 5 9
+WALL -17 31 -20 31 5 9
+
+TEXTURE assets/Textures/Rock.png
+WALL 14 27 24 27 7 -1
+WALL 24 27 24 41 7 -1
+WALL 14 41 14 36 7 -1
+WALL 14 36 14 32 7 8
+WALL 14 32 14 27 7 -1
+WALL 14 36 12 36 8 -1
+WALL 12 32 14 32 8 -1
+
+TEXTURE assets/Textures/Crystal 2.png
+WALL 24 41 14 41 7 -1
