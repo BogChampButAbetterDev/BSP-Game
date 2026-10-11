@@ -26,7 +26,7 @@ bool Game::init()
 
 void Game::run()
 {
-    m_ml = MapLoader("maps/L_Room.lvl");
+    m_ml = MapLoader("maps/Sect_Test.lvl");
     m_map = m_ml.read();
     m_ren.loadTextures(m_map.texturePaths);
     m_map.tree = buildBSP(m_map.walls);

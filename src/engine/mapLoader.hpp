@@ -4,6 +4,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 #include "camera.hpp"
 #include "math/geometry.hpp"
@@ -16,7 +17,17 @@ struct Map
     std::string name = "";
     Vector3 playerPos = {0, 0, 0};
     std::vector<Wall> walls;
-    
+
+    std::vector<Sector> sectors;
+
+    std::unordered_map<int, int> sectorSlotById;
+
+    int slotOfSector(int id) const
+    {
+        auto it = sectorSlotById.find(id);
+        return it == sectorSlotById.end() ? -1 : it->second;
+    }
+
     std::vector<std::string> texturePaths;
 
     BSPTree tree;
@@ -32,6 +43,7 @@ enum class ParseState
     None,
     ExpectMapName,
     ExpectPlayerPos,
+    ExpectSectorData,
     ExpectWallData
 };
 
@@ -48,5 +60,6 @@ private:
 
     std::vector<float> m_pendingNumbers;
 
-    void parseWalls(float value, Map& out, int texId);
+    bool parseSector(float value, Map& out);
+    bool parseWalls(float value, Map& out, int texId);
 };

@@ -12,6 +12,7 @@ struct Framebuffer
 {   
     SDL_Texture* tex = nullptr;
     std::vector<uint32_t> pixels;
+    std::vector<uint8_t> covered;
 
     Camera* activeCamera = nullptr;
 
@@ -19,10 +20,13 @@ struct Framebuffer
 
     Framebuffer() {}
 
+    int overdrawCounter = 0;
+
     void create(SDL_Renderer* ren)
     {
         tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, DEF_WIN_WIDTH, DEF_WIN_HEIGHT);
         pixels.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
+        covered.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
     }
 
     void setActiveCamera(Camera* cam)
@@ -33,11 +37,24 @@ struct Framebuffer
     void clear(uint32_t color)
     {
         std::fill(pixels.begin(), pixels.end(), color);
+        std::fill(covered.begin(), covered.end(), 0);
     }
 
     void setDrawColor(uint32_t color)
     {
         current_color = color;
+    }
+
+    bool isCovered(int x, int y) const 
+    {
+        return covered[y * DEF_WIN_WIDTH + x] != 0;
+    }
+
+    void plotFree(int x, int y, uint32_t color)
+    {
+        int i = y * DEF_WIN_WIDTH + x;
+        pixels[i] = color;
+        covered[i] = 1;
     }
 
     void setPixel(int x, int y)

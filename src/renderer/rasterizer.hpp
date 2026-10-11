@@ -66,22 +66,25 @@ inline std::vector<Vector3> clipNear(const std::vector<Vector3>& in, float nearZ
     return out;
 }
 
-inline std::vector<ClipVertex> clipVertNear(const std::vector<ClipVertex>& in, float nearZ)
+constexpr int MAX_CLIP_VERTS = 8;
+
+inline int clipVertNear(const ClipVertex* in, size_t n, float nearZ, ClipVertex* out)
 {
-    std::vector<ClipVertex> out;
-    for (size_t i = 0; i < in.size(); i++)
+    int count = 0;
+    for (size_t i = 0; i < n; i++)
     {
         ClipVertex a = in[i];
-        ClipVertex b = in[(i + 1) % in.size()];
+        ClipVertex b = in[(i + 1) % n];
         float da = a.pos.z - nearZ;
         float db = b.pos.z - nearZ;
-        if (da >= 0) out.push_back(a);
+
+        if (da >= 0) out[count++] = a;
         if ((da >= 0) != (db >= 0))
         {
-            out.push_back(a.lerp(b, (da / (da - db))));
+            out[count++] = a.lerp(b, (da / (da - db)));
         }
     }
-    return out;
+    return count;
 }
 
 inline void drawWall(Framebuffer* buf, Wall wall)
@@ -139,7 +142,7 @@ inline void fillConvexPolygon(Framebuffer* buf, std::span<const Vector2> verts)
 
             for (int x = xStart; x <= xEnd; x++)
             {
-                buf->setPixel(x, y);
+                if (!buf->isCovered(x, y)) buf->plotFree(x, y, buf->current_color);
             }
         }
     }
@@ -191,13 +194,15 @@ inline void fillTexturedPolygon(Framebuffer* buf, std::span<const ScreenVertex> 
 
         for (int x = xStart; x <= xEnd; x++)
         {
+            if (buf->isCovered(x, y)) continue;
+
             float s = (x + 0.5f - L.x) / spanW;
             ScreenVertex p = L.lerp(R, s);
 
             float u = p.uOverZ / p.invZ;
             float v = p.vOverZ / p.invZ;
 
-            buf->setPixelColor(x, y, scaleColor(tex.sample(u, v), shade));
+            buf->plotFree(x, y, scaleColor(tex.sample(u, v), shade));
         }
     }
 }
@@ -224,31 +229,33 @@ inline void fillWall(Framebuffer* buf, Wall wall)
     fillConvexPolygon(buf, std::span<const Vector2>(vertsProj.data(), verts.size()));
 }
 
-inline void fillWallTextured(Framebuffer* buf, Wall wall, const Texture& tex, float shade)
+inline void fillWallTextured(Framebuffer* buf, Wall wall, const Texture& tex, float shade, float yBottom, float yTop)
 {
     Camera* cam = buf->activeCamera;
-    float vBottom = (wall.top - wall.bottom) / TEX_WORLD_H;
 
-    std::vector<ClipVertex> corners =
+    float vTop = -yTop / TEX_WORLD_H;
+    float vBottom = -yBottom / TEX_WORLD_H;
+
+    ClipVertex corners[4] = 
     {
-        { cam->toCamSpace({wall.line.start.x, wall.top,    wall.line.start.y}), wall.UStart, 0.0f    },
-        { cam->toCamSpace({wall.line.end.x,   wall.top,    wall.line.end.y}),   wall.UEnd,   0.0f    },
+        { cam->toCamSpace({wall.line.start.x, wall.top,    wall.line.start.y}), wall.UStart, vTop    },
+        { cam->toCamSpace({wall.line.end.x,   wall.top,    wall.line.end.y}),   wall.UEnd,   vTop    },
         { cam->toCamSpace({wall.line.end.x,   wall.bottom, wall.line.end.y}),   wall.UEnd,   vBottom },
         { cam->toCamSpace({wall.line.start.x, wall.bottom, wall.line.start.y}), wall.UStart, vBottom },
     };
 
-    std::vector<ClipVertex> clipped = clipVertNear(corners, cam->getNear());
+    ClipVertex clipped[MAX_CLIP_VERTS];
+    int count = clipVertNear(corners, 4, cam->getNear(), clipped);
+    if (count < 3) return;
 
-    if (clipped.size() < 3) return;
-    std::vector<ScreenVertex> screen;
-    screen.reserve(clipped.size());
+    ScreenVertex screen[MAX_CLIP_VERTS];
 
-    for (const ClipVertex& c : clipped)
+    for (int i = 0; i < count; i++)
     {
-        Vector2 p = cam->projectCamSpace(c.pos);
-        float invZ = 1.0f / c.pos.z;
-        screen.push_back({p.x, p.y, invZ, c.u * invZ, c.v * invZ});
+        Vector2 p = cam->projectCamSpace(clipped[i].pos);
+        float invZ = 1.0f / clipped[i].pos.z;
+        screen[i] = {p.x, p.y, invZ, clipped[i].u * invZ, clipped[i].v * invZ};
     }
 
-    fillTexturedPolygon(buf, screen, tex, shade);
+    fillTexturedPolygon(buf, std::span<const ScreenVertex>(screen, count), tex, shade);
 }

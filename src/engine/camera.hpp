@@ -31,6 +31,12 @@ public:
     float getNear() const { return m_near; }
     float getYaw() const { return m_yaw; }
 
+    float getCosYaw() const { return std::cos(deg2rad(m_yaw)); }
+    float getSinYaw() const { return std::sin(deg2rad(m_yaw)); }
+
+    float getCosPitch() const { return std::cos(deg2rad(m_pitch)); }
+    float getSinPitch() const { return std::sin(deg2rad(m_pitch)); }
+
     Input in;
 
 private:

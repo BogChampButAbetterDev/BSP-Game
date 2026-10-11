@@ -1,6 +1,6 @@
 MAP LRoom
 
-PLAYER 0 1.5 2
+PLAYER 0 1.0 2
 
 TEXTURE assets/Textures/Bricks.png
 WALL -10  0   10  0    0 3

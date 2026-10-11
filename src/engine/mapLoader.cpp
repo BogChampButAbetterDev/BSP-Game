@@ -2,6 +2,7 @@
 
 namespace
 {
+    // Returns the index of `path` in the map's texture list, adding it if it's new.
     int textureIndex(Map& map, const std::string& path)
     {
         for (size_t i = 0; i < map.texturePaths.size(); i++)
@@ -27,7 +28,7 @@ MapLoader::MapLoader(const std::string &filename)
 
         file.close();
     }
-    else 
+    else
     {
         std::cerr << "Couldn't open " << filename << ".\n";
         std::cout << "Map will not load\n";
@@ -46,7 +47,7 @@ Map MapLoader::read()
     for (size_t i = 0; i < mapData.length(); i++)
     {
         unsigned char currentChar = (unsigned char)mapData[i];
-        
+
         if (std::isalpha(currentChar))
         {
             std::stringstream buf;
@@ -68,6 +69,11 @@ Map MapLoader::read()
                 parseState = ParseState::ExpectPlayerPos;
                 m_pendingNumbers.clear();
             }
+            else if (word == "SECTOR")
+            {
+                parseState = ParseState::ExpectSectorData;
+                m_pendingNumbers.clear();
+            }
             else if (word == "WALL")
             {
                 parseState = ParseState::ExpectWallData;
@@ -78,6 +84,8 @@ Map MapLoader::read()
                 parseState = ParseState::None;
                 m_pendingNumbers.clear();
 
+                // Paths contain digits, dots, underscores and spaces, which the
+                // tokenizer would chop up, so read the rest of the line as raw text.
                 while (i < mapData.length() && (mapData[i] == ' ' || mapData[i] == '\t')) { i++; }
 
                 size_t pathStart = i;
@@ -99,7 +107,7 @@ Map MapLoader::read()
                 out.name = word;
                 parseState = ParseState::None;
             }
-            else 
+            else
             {
                 std::cout << "Unknown keyword: " << word << "\n";
             }
@@ -139,9 +147,19 @@ Map MapLoader::read()
                     m_pendingNumbers.clear();
                 }
             }
-            if (parseState == ParseState::ExpectWallData)
+            else if (parseState == ParseState::ExpectSectorData)
             {
-                parseWalls(value, out, currentTexture);
+                if (!parseSector(value, out))
+                {
+                    return {};   // error already printed
+                }
+            }
+            else if (parseState == ParseState::ExpectWallData)
+            {
+                if (!parseWalls(value, out, currentTexture))
+                {
+                    return {};   // error already printed
+                }
             }
 
             i--;
@@ -151,24 +169,74 @@ Map MapLoader::read()
     return out;
 }
 
-void MapLoader::parseWalls(float value, Map& out, int texId)
+// SECTOR id floor ceiling light
+// The id is a name you choose, and walls refer to it. The loader maps it to the
+// sector's slot in Map::sectors, so ids can be any order or gaps in the file.
+bool MapLoader::parseSector(float value, Map& out)
 {
     m_pendingNumbers.push_back(value);
-    if (m_pendingNumbers.size() == 6)
+    if (m_pendingNumbers.size() < 4) return true;
+
+    Sector s;
+    s.id      = (int)m_pendingNumbers[0];
+    s.floorHt   = m_pendingNumbers[1];
+    s.ceilingHt = m_pendingNumbers[2];
+    s.light   = m_pendingNumbers[3];
+
+    if (out.sectorSlotById.count(s.id))
     {
-        Wall wall;
-
-        wall.line.start = { m_pendingNumbers[0], m_pendingNumbers[1] }; // x1 y1
-        wall.line.end   = { m_pendingNumbers[2], m_pendingNumbers[3] }; // x2 y2
-        wall.bottom     = m_pendingNumbers[4];                          // bottom
-        wall.top        = m_pendingNumbers[5];                          // top
-        wall.texId      = texId;                                        // index into Map::texturePaths, -1 = none
-
-        wall.computeNormal();
-        wall.UStart = wall.line.length() / TEX_WORLD_H;
-        wall.UEnd = 0.0f;
-
-        out.walls.push_back(wall);
-        m_pendingNumbers.clear();
+        std::cerr << "Map parse failure: sector id " << s.id << " is defined twice\n";
+        return false;
     }
+
+    out.sectorSlotById[s.id] = (int)out.sectors.size();
+    out.sectors.push_back(s);
+    m_pendingNumbers.clear();
+    return true;
+}
+
+// WALL x1 z1 x2 z2 frontSector backSector   (-1 = solid, no sector on that side)
+// Returns false on a bad sector reference.
+bool MapLoader::parseWalls(float value, Map& out, int texId)
+{
+    m_pendingNumbers.push_back(value);
+    if (m_pendingNumbers.size() < 6) return true;
+
+    Wall wall;
+
+    wall.line.start = { m_pendingNumbers[0], m_pendingNumbers[1] }; // x1 z1
+    wall.line.end   = { m_pendingNumbers[2], m_pendingNumbers[3] }; // x2 z2
+    wall.texId       = texId;
+
+    // The file holds sector ids. Walls store the slot in Map::sectors, so
+    // drawing never needs a lookup.
+    int frontId = (int)m_pendingNumbers[4];
+    int backId  = (int)m_pendingNumbers[5];
+
+    wall.frontSect = out.slotOfSector(frontId);
+    wall.backSect  = (backId == -1) ? -1 : out.slotOfSector(backId);
+
+    if (wall.frontSect < 0 || (backId != -1 && wall.backSect < 0))
+    {
+        std::cerr << "Map parse failure: wall " << out.walls.size()
+                  << " uses sector id " << frontId << "/" << backId
+                  << " which isn't defined above it\n";
+        return false;
+    }
+
+    // Heights come from the front sector. Two-sided walls get their lower and
+    // upper pieces from both sectors at draw time.
+    wall.bottom = out.sectors[wall.frontSect].floorHt;
+    wall.top    = out.sectors[wall.frontSect].ceilingHt;
+
+    wall.computeNormal();
+
+    // u runs from length/TEX_WORLD_W at the start down to 0 at the end, so the
+    // texture isn't mirrored when you face the front of the wall.
+    wall.UStart = wall.line.length() / TEX_WORLD_W;
+    wall.UEnd   = 0.0f;
+
+    out.walls.push_back(wall);
+    m_pendingNumbers.clear();
+    return true;
 }

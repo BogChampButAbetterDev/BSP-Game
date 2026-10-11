@@ -48,17 +48,57 @@ void Renderer::renderMap(const Map& map)
     BSPTraverse(map.tree, map.tree.root, camFloorPos, *m_renOrder);
     for (const Wall& w : (*m_renOrder))
     {
-        if (w.cullWall(camFloorPos)) continue;
-        float s = shade(w.normal, m_light);
+        float side = w.line.sideOf(camFloorPos);
+        if (side == 0) continue;
 
-        if (w.texId >= 0 && w.texId < (int)m_textures.size())
+        bool frontFacing = side > 0;
+        bool twoSided = w.backSect >= 0;
+
+        if (!twoSided && !frontFacing) continue;
+
+        Wall draw = w;
+        int nearIdx = frontFacing ? w.frontSect : w.backSect;
+        int farIdx = frontFacing ? w.backSect : w.frontSect;
+
+        if (!frontFacing)
         {
-            fillWallTextured(&m_buf, w, m_textures[w.texId], s);
+            std::swap(draw.UStart, draw.UEnd);
+            draw.normal = -draw.normal;
+        }
+
+        const Sector& nearSec = map.sectors[nearIdx];
+        float s = shade(draw.normal, m_light);
+
+        struct Piece { float bottom = 0.0f; float top = 0.0f; };
+        Piece pieces[2];
+        int pieceCount = 0;
+
+        if (farIdx < 0)
+        {
+            pieces[pieceCount++] = { nearSec.floorHt, nearSec.ceilingHt };
         }
         else
         {
-            m_buf.setDrawColor(applyLighting(baseColor, m_light, w));
-            fillWall(&m_buf, w);
+            const Sector& farSec = map.sectors[farIdx];
+            if (farSec.floorHt > nearSec.floorHt)
+                pieces[pieceCount++] = { nearSec.floorHt, farSec.floorHt };
+            if (farSec.ceilingHt < nearSec.ceilingHt)
+                pieces[pieceCount++] = {farSec.ceilingHt, nearSec.ceilingHt};
+        }
+
+        for (int i = 0; i < pieceCount; i++)
+        {
+            draw.bottom = pieces[i].bottom;
+            draw.top = pieces[i].top;
+            if (w.texId >= 0 && w.texId < (int)m_textures.size())
+            {
+                fillWallTextured(&m_buf, draw, m_textures[draw.texId], s, draw.bottom, draw.top);
+            }
+            else
+            {
+                m_buf.setDrawColor(applyLighting(baseColor, m_light, draw));
+                fillWall(&m_buf, draw);
+            }
         }
     }
 }

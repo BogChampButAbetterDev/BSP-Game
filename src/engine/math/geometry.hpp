@@ -17,6 +17,14 @@ struct Line
     }
 };
 
+struct Sector
+{
+    int id = 0;
+    float floorHt = 0.0f;
+    float ceilingHt = 0.0f;
+    float light = 0.0f;
+};
+
 struct Wall
 {
     Line line;
@@ -26,6 +34,9 @@ struct Wall
     Vector2 normal;
 
     int texId = -1;
+
+    int frontSect = -1;
+    int backSect = -1;
 
     float UStart = 0.0f;
     float UEnd = 1.0f;

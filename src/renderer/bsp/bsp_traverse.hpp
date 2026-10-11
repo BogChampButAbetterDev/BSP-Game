@@ -23,10 +23,10 @@ inline void BSPTraverse(const BSPTree& tree, int nodeIDX, Vector2 posXZ, std::ve
         far = node.front;
     }
 
-    BSPTraverse(tree, far, posXZ, order);
+    BSPTraverse(tree, near, posXZ, order);
     for (const Wall& w : node.coplanarWalls)
     {
         order.push_back(w);
     }
-    BSPTraverse(tree, near, posXZ, order);
+    BSPTraverse(tree, far, posXZ, order);
 }
