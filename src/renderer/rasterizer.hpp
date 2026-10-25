@@ -10,6 +10,23 @@
 #include "engine/math/geometry.hpp"
 #include "engine/texture.hpp"
 
+constexpr int MAX_CLIP_VERTS = 8;
+
+struct View
+{
+    float ox, oy, f;
+    float eyeY, camX, camZ;
+    float cy, sy;
+    float nearZ;
+};
+
+inline View makeView(Camera* cam)
+{
+    Vector3 p = cam->getPos();
+    return { (float)HALF_WID, cam->getHorizon(), cam->getFocal(),
+             p.y, p.x, p.z, cam->getCosYaw(), cam->getSinYaw(), cam->getNear() };
+}
+
 inline void drawLine(Framebuffer* buf, Vector2 a, Vector2 b)
 {
     float dx = b.x - a.x;
@@ -48,25 +65,24 @@ inline void drawLine(Framebuffer* buf, Vector2 a, Vector2 b)
     }
 }
 
-inline std::vector<Vector3> clipNear(const std::vector<Vector3>& in, float nearZ)
+inline int clipNear(const Vector3* in, size_t n, float nearZ, Vector3* out)
 {
-    std::vector<Vector3> out;
-    for (size_t i = 0; i < in.size(); i++)
+    int count = 0;
+    for (size_t i = 0; i < n; i++)
     {
         Vector3 a = in[i];
-        Vector3 b = in[(i + 1) % in.size()];
+        Vector3 b = in[(i + 1) % n];
         float da = a.z - nearZ;
         float db = b.z - nearZ;
-        if (da >= 0) out.push_back(a);
+
+        if (da >= 0) out[count++] = a;
         if ((da >= 0) != (db >= 0))
         {
-            out.push_back(a + (b - a) * (da / (da - db)));
+            out[count++] = a + (b - a) * (da / (da - db));
         }
     }
-    return out;
+    return count;
 }
-
-constexpr int MAX_CLIP_VERTS = 8;
 
 inline int clipVertNear(const ClipVertex* in, size_t n, float nearZ, ClipVertex* out)
 {
@@ -85,6 +101,19 @@ inline int clipVertNear(const ClipVertex* in, size_t n, float nearZ, ClipVertex*
         }
     }
     return count;
+}
+
+inline bool clipSegmentNear(Vector3& a, Vector3& b, float nearZ)
+{
+    float da = a.z - nearZ;
+    float db = b.z - nearZ;
+
+    if (da < 0 && db < 0) return false;
+
+    if (da < 0) a = a + (b - a) * (da / (da - db)); 
+    else if (db < 0) b = a + (b - a) * (da / (da - db));
+
+    return true;
 }
 
 inline void drawWall(Framebuffer* buf, Wall wall)
@@ -148,114 +177,58 @@ inline void fillConvexPolygon(Framebuffer* buf, std::span<const Vector2> verts)
     }
 }
 
-inline void fillTexturedPolygon(Framebuffer* buf, std::span<const ScreenVertex> verts, const Texture& tex, float shade)
-{
-    if (verts.size() < 3) return;
-
-    float minYf = verts[0].y, maxYf = verts[0].y;
-    for (auto& v : verts) { minYf = std::min(minYf, v.y); maxYf = std::max(maxYf, v.y); }
-
-    int yStart = std::max(0, (int)std::floor(minYf));
-    int yEnd   = std::min(DEF_WIN_HEIGHT - 1, (int)std::ceil(maxYf));
-
-    int n = (int)verts.size();
-
-    for (int y = yStart; y <= yEnd; y++)
-    {
-        float yf = y + 0.5f;
-        ScreenVertex cross[2];
-        int crossCount = 0;
-
-        for (int i = 0; i < n; i++)
-        {
-            ScreenVertex a = verts[i];
-            ScreenVertex b = verts[(i + 1) % n];
-
-            if (a.y == b.y) continue;
-
-            if ((yf >= a.y && yf < b.y) || (yf >= b.y && yf < a.y))
-            {
-                float t = (yf - a.y) / (b.y - a.y);
-                if (crossCount < 2) cross[crossCount++] = a.lerp(b, t);
-            }
-        }
-
-        if (crossCount != 2) continue;
-        if (cross[0].x > cross[1].x) std::swap(cross[0], cross[1]);
-
-        const ScreenVertex& L = cross[0];
-        const ScreenVertex& R = cross[1];
-
-        float spanW = R.x - L.x;
-        if (spanW <= 0.0f) continue;
-
-        int xStart = std::max(0, (int)std::ceil(L.x - 0.5f));
-        int xEnd   = std::min(DEF_WIN_WIDTH - 1, (int)std::floor(R.x - 0.5f));
-
-        for (int x = xStart; x <= xEnd; x++)
-        {
-            if (buf->isCovered(x, y)) continue;
-
-            float s = (x + 0.5f - L.x) / spanW;
-            ScreenVertex p = L.lerp(R, s);
-
-            float u = p.uOverZ / p.invZ;
-            float v = p.vOverZ / p.invZ;
-
-            buf->plotFree(x, y, scaleColor(tex.sample(u, v), shade));
-        }
-    }
-}
-
 inline void fillWall(Framebuffer* buf, Wall wall)
 {
     Camera* cam = buf->activeCamera;
 
-    Vector3 c_topStart = cam->toCamSpace({wall.line.start.x, wall.top, wall.line.start.y});
-    Vector3 c_topEnd = cam->toCamSpace({wall.line.end.x, wall.top, wall.line.end.y});
-    Vector3 c_bottomStart = cam->toCamSpace({wall.line.start.x, wall.bottom, wall.line.start.y});
-    Vector3 c_bottomEnd = cam->toCamSpace({wall.line.end.x, wall.bottom, wall.line.end.y});
+    Vector3 corners[4] =
+    {
+        { cam->toCamSpace({wall.line.start.x, wall.top, wall.line.start.y}) },
+        { cam->toCamSpace({wall.line.end.x, wall.top, wall.line.end.y}) },
+        { cam->toCamSpace({wall.line.start.x, wall.bottom, wall.line.start.y}) },
+        { cam->toCamSpace({wall.line.end.x, wall.bottom, wall.line.end.y}) }
+    };
 
     const float nearPlane = cam->getNear();
 
-    std::vector<Vector3> verts = clipNear({c_topStart, c_topEnd, c_bottomEnd, c_bottomStart}, nearPlane);
-    if (verts.size() < 3) return;
-    std::array<Vector2, 8> vertsProj;
-    for (size_t i = 0; i < verts.size(); i++)
-    {  
-        vertsProj[i] = cam->projectCamSpace(verts[i]);
-    }
-
-    fillConvexPolygon(buf, std::span<const Vector2>(vertsProj.data(), verts.size()));
-}
-
-inline void fillWallTextured(Framebuffer* buf, Wall wall, const Texture& tex, float shade, float yBottom, float yTop)
-{
-    Camera* cam = buf->activeCamera;
-
-    float vTop = -yTop / TEX_WORLD_H;
-    float vBottom = -yBottom / TEX_WORLD_H;
-
-    ClipVertex corners[4] = 
-    {
-        { cam->toCamSpace({wall.line.start.x, wall.top,    wall.line.start.y}), wall.UStart, vTop    },
-        { cam->toCamSpace({wall.line.end.x,   wall.top,    wall.line.end.y}),   wall.UEnd,   vTop    },
-        { cam->toCamSpace({wall.line.end.x,   wall.bottom, wall.line.end.y}),   wall.UEnd,   vBottom },
-        { cam->toCamSpace({wall.line.start.x, wall.bottom, wall.line.start.y}), wall.UStart, vBottom },
-    };
-
-    ClipVertex clipped[MAX_CLIP_VERTS];
-    int count = clipVertNear(corners, 4, cam->getNear(), clipped);
+    Vector3 clipped[MAX_CLIP_VERTS];
+    int count = clipNear(corners, 4, nearPlane, clipped);
     if (count < 3) return;
 
-    ScreenVertex screen[MAX_CLIP_VERTS];
-
+    std::array<Vector2, 8> vertsProj;
     for (int i = 0; i < count; i++)
-    {
-        Vector2 p = cam->projectCamSpace(clipped[i].pos);
-        float invZ = 1.0f / clipped[i].pos.z;
-        screen[i] = {p.x, p.y, invZ, clipped[i].u * invZ, clipped[i].v * invZ};
+    {  
+        vertsProj[i] = cam->projectCamSpace(clipped[i]);
     }
 
-    fillTexturedPolygon(buf, std::span<const ScreenVertex>(screen, count), tex, shade);
+    fillConvexPolygon(buf, std::span<const Vector2>(vertsProj.data(), count));
+}
+
+inline void fillWallColumn(Framebuffer* buf, const View& V, int x, int y0, int y1, float invZ, float u, const Texture& tex, float shade)
+{
+    if (y0 > y1) return;
+    float hStep = 1.0f / (V.f * invZ);
+    float h  = V.eyeY + (V.oy - (y0 + 0.5f)) * hStep; 
+    float v  = -h / TEX_WORLD_H;
+    float dv = hStep / TEX_WORLD_H;
+    for (int y = y0; y <= y1; y++, v += dv)
+        buf->setPixelColor(x, y, scaleColor(tex.sample(u, v), shade));
+}
+
+inline void fillFlatColumn(Framebuffer* buf, const View& V, int x, int y0, int y1, float planeH, const Texture& tex, float shade)
+{
+    if (y0 > y1) return;
+    float dy = planeH - V.eyeY;
+    float xn = (x + 0.5f - V.ox) / V.f;
+
+    for (int y = y0; y <= y1; y++)
+    {
+        float d = V.oy - (y + 0.5f);
+        if (d == 0.0f) continue;
+        float z  = V.f * dy / d;
+        float xc = xn * z;
+        float wx = V.camX + xc * V.cy + z * V.sy;
+        float wz = V.camZ - xc * V.sy + z * V.cy;
+        buf->setPixelColor(x, y, scaleColor(tex.sample(wx / TEX_WORLD_H, wz / TEX_WORLD_H), shade));
+    }
 }

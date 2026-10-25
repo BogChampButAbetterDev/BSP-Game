@@ -22,6 +22,10 @@ struct Sector
     int id = 0;
     float floorHt = 0.0f;
     float ceilingHt = 0.0f;
+
+    int floorTexId = -1;
+    int ceilingTexId = -1;
+
     float light = 0.0f;
 };
 

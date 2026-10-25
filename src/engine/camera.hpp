@@ -37,6 +37,9 @@ public:
     float getCosPitch() const { return std::cos(deg2rad(m_pitch)); }
     float getSinPitch() const { return std::sin(deg2rad(m_pitch)); }
 
+    float getFocal() const { return (float)m_focalLen; }
+    float getHorizon() const { return HALF_HT - tanf(deg2rad(m_pitch)) * m_focalLen; }
+
     Input in;
 
 private:
@@ -52,8 +55,8 @@ private:
     int m_speed = 10;
     float m_rotSpeed = 100.0f;
 
-    float m_eyeHeight = 0.7f;
+    float m_eyeHeight = 1.7f;
 
     int m_focalLen = HALF_WID;
-    float m_near = 0.1;
+    float m_near = 0.1f;
 };

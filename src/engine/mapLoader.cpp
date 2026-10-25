@@ -175,13 +175,15 @@ Map MapLoader::read()
 bool MapLoader::parseSector(float value, Map& out)
 {
     m_pendingNumbers.push_back(value);
-    if (m_pendingNumbers.size() < 4) return true;
+    if (m_pendingNumbers.size() < 6) return true;
 
     Sector s;
-    s.id      = (int)m_pendingNumbers[0];
-    s.floorHt   = m_pendingNumbers[1];
-    s.ceilingHt = m_pendingNumbers[2];
-    s.light   = m_pendingNumbers[3];
+    s.id           = (int)m_pendingNumbers[0];
+    s.floorHt      = m_pendingNumbers[1];
+    s.ceilingHt    = m_pendingNumbers[2];
+    s.light        = m_pendingNumbers[3];
+    s.floorTexId   = (int)m_pendingNumbers[4];
+    s.ceilingTexId = (int)m_pendingNumbers[5];
 
     if (out.sectorSlotById.count(s.id))
     {

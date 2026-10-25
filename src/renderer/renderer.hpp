@@ -8,6 +8,7 @@
 #include "framebuffer.hpp"
 #include "rasterizer.hpp"
 #include "debug_view.hpp"
+#include "column_render.hpp"
 
 #include "bsp/bsp_traverse.hpp"
 #include "engine/mapLoader.hpp"
@@ -39,8 +40,17 @@ private:
     SDL_Renderer* m_ren = nullptr;
     Framebuffer m_buf;
 
+    std::vector<int> m_top, m_bottom; 
+    int m_openCols = 0;
+
     std::unique_ptr<std::vector<Wall>> m_renOrder = std::make_unique<std::vector<Wall>>();
     std::vector<Texture> m_textures;
+
+    Texture m_defaultTex;
+    Texture m_defaultFloor;
+    Texture m_defaultCeil;
     
     DirectionalLight m_light;
+
+    void drawPlaneClaim(Line line, float height, bool isCeiling, DirectionalLight light, uint32_t color);
 };
