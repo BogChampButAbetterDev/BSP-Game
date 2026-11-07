@@ -11,8 +11,13 @@
 struct Framebuffer
 {   
     SDL_Texture* tex = nullptr;
+
     std::vector<uint32_t> pixels;
     std::vector<uint8_t> covered;
+    std::vector<int16_t> sectorAt;
+
+    int camSector = -1;
+    int drawSector = -1;
 
     Camera* activeCamera = nullptr;
 
@@ -20,13 +25,20 @@ struct Framebuffer
 
     Framebuffer() {}
 
-    int overdrawCounter = 0;
+    bool sectorMatches(int i) const
+    {
+        if (drawSector < 0) return true;
+        int s = sectorAt[i];
+        if (s < 0) s = camSector;
+        return s == drawSector;
+    }
 
     void create(SDL_Renderer* ren)
     {
         tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, DEF_WIN_WIDTH, DEF_WIN_HEIGHT);
         pixels.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
         covered.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
+        sectorAt.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
     }
 
     void setActiveCamera(Camera* cam)
@@ -38,6 +50,7 @@ struct Framebuffer
     {
         std::fill(pixels.begin(), pixels.end(), color);
         std::fill(covered.begin(), covered.end(), 0);
+        std::fill(sectorAt.begin(), sectorAt.end(), (int16_t)-1);
     }
 
     void setDrawColor(uint32_t color)

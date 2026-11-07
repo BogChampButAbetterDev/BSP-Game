@@ -22,6 +22,8 @@ public:
     Vector2 projectPoint(Vector3 point) const { return projectCamSpace(toCamSpace(point)); }
     float viewDepth(Vector3 point) const { return toCamSpace(point).z; }
 
+    Vector3 camToWorldDir(Vector3 c) const;
+
     void update(float delta);
     void move(float delta);
 
@@ -38,7 +40,7 @@ public:
     float getSinPitch() const { return std::sin(deg2rad(m_pitch)); }
 
     float getFocal() const { return (float)m_focalLen; }
-    float getHorizon() const { return HALF_HT - tanf(deg2rad(m_pitch)) * m_focalLen; }
+    //float getHorizon() const { return HALF_HT - tanf(deg2rad(m_pitch)) * m_focalLen; }
 
     Input in;
 

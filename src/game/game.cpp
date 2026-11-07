@@ -34,6 +34,12 @@ void Game::run()
     m_cam = Camera({0, 0, 0});
     m_map.onLoad(m_cam);
 
+
+    Vector3 pos = m_cam.getPos();
+    Vector3 v = {0.3f, -0.2f, 1.0f};
+    Vector3 back = m_cam.toCamSpace(pos + m_cam.camToWorldDir(v));
+    std::cout << back.x << " " << back.y << " " << back.z << "\n";
+
     DirectionalLight light =
     {
         .dir = {0.8f, 0.3f, 0.5f}

@@ -8,11 +8,9 @@
 #include "framebuffer.hpp"
 #include "rasterizer.hpp"
 #include "debug_view.hpp"
-#include "column_render.hpp"
 
 #include "bsp/bsp_traverse.hpp"
 #include "engine/mapLoader.hpp"
-#include "globals/color.hpp"
 #include "engine/lighting.hpp"
 #include "engine/texture.hpp"
 
@@ -52,5 +50,10 @@ private:
     
     DirectionalLight m_light;
 
+    int updateCameraSector(const Map& map, Vector2 p);
+
     void drawPlaneClaim(Line line, float height, bool isCeiling, DirectionalLight light, uint32_t color);
+
+    int  findCameraSector(const Map& map, Vector2 p) const;
+    void drawFlats(const Map& map, int camSector);
 };
