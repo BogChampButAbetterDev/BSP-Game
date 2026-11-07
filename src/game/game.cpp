@@ -31,14 +31,8 @@ void Game::run()
     m_ren.loadTextures(m_map.texturePaths);
     m_map.tree = buildBSP(m_map.walls);
 
-    m_cam = Camera({0, 0, 0});
-    m_map.onLoad(m_cam);
-
-
-    Vector3 pos = m_cam.getPos();
-    Vector3 v = {0.3f, -0.2f, 1.0f};
-    Vector3 back = m_cam.toCamSpace(pos + m_cam.camToWorldDir(v));
-    std::cout << back.x << " " << back.y << " " << back.z << "\n";
+    m_play = Player({0, 0, 0});
+    m_map.onLoad(m_play.getCam());
 
     DirectionalLight light =
     {
@@ -46,7 +40,7 @@ void Game::run()
     };
     m_ren.regLight(light);
 
-    m_ren.getBuf()->setActiveCamera(&m_cam);
+    m_ren.getBuf()->setActiveCamera(&m_play.getCam());
 
     Uint32 frameCount = 0;
     Uint64 lastFpsUpdateTime = SDL_GetTicks(); 
@@ -73,7 +67,7 @@ void Game::run()
         
         pollEvents();
 
-        m_cam.update(delta);
+        m_play.update(delta);
 
         SDL_SetRenderDrawColor(m_sdlren, 0, 0, 0, 255);
         SDL_RenderClear(m_sdlren);
@@ -119,7 +113,7 @@ void Game::pollEvents()
             m_state = GAME_STATE::PLAY;
         }
 
-        pollInput(event, &m_cam.in);
+        pollInput(event, &m_play.getCam().in);
     }
 }
 

@@ -24,7 +24,6 @@ public:
 
     Vector3 camToWorldDir(Vector3 c) const;
 
-    void update(float delta);
     void move(float delta);
 
     Vector3 getPos() const { return m_pos; }
@@ -44,9 +43,9 @@ public:
 
     Input in;
 
-private:
-    Vector3 m_pos;
+public:
     Vector3 m_direction;
+    Vector3 m_pos;
     Vector3 m_up = {0, 1, 0};
     Vector3 m_forward = {0, 0, 1};
     Vector3 m_right;
@@ -57,6 +56,7 @@ private:
     int m_speed = 10;
     float m_rotSpeed = 100.0f;
 
+private:
     float m_eyeHeight = 1.7f;
 
     int m_focalLen = HALF_WID;

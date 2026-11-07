@@ -3,7 +3,6 @@
 #include <cmath>
 #include <vector>
 #include <cstdint>
-#include <SDL3/SDL.h>
 
 #include "globals/color.hpp"
 

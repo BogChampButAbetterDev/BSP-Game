@@ -39,31 +39,6 @@ Vector3 Camera::camToWorldDir(Vector3 c) const
     return { c.x * cy + yz * sy, ry, -c.x * sy + yz * cy };
 }
 
-void Camera::update(float delta)
-{
-    m_direction = {0, 0, 0};
-
-    if (in.w)      { m_direction.z = 1; }
-    if (in.s)      { m_direction.z = -1; }
-    if (in.a)      { m_direction.x = -1; }
-    if (in.d)      { m_direction.x = 1; }
-    if (in.arL)    { m_yaw -= m_rotSpeed * delta; }
-    if (in.arR)    { m_yaw += m_rotSpeed * delta; }
-    if (in.arUp)   { m_pitch -= m_rotSpeed * delta; }
-    if (in.arDown) { m_pitch += m_rotSpeed * delta; }
-
-    m_yaw += in.m_RX * MOUSE_SENSITIVITY;
-    m_pitch += in.m_RY * MOUSE_SENSITIVITY;
-
-    m_pitch = std::clamp(m_pitch, -89.0f, 89.0f);
-
-    in.m_RX = 0.0f;
-    in.m_RY = 0.0f;
-
-    m_direction = m_direction.normalized();
-    move(delta);
-} 
-
 void Camera::move(float delta)
 {
     float yawRad = deg2rad(m_yaw);

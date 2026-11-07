@@ -3,6 +3,7 @@
 #include "engine/platform.hpp"
 #include "renderer/renderer.hpp"
 #include "engine/camera.hpp"
+#include "engine/player.hpp"
 #include "engine/input.hpp"
 #include "engine/mapLoader.hpp"
 
@@ -38,8 +39,8 @@ private:
 
     Uint64 lastTime = 0;
     float delta = 0.0f; 
-
-    Camera m_cam;
+    
+    Player m_play;
 
     MapLoader m_ml;
     Map m_map;
