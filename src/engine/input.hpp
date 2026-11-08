@@ -12,6 +12,8 @@ struct Input
     bool arUp = false;
     bool arDown = false;
 
+    bool lmb = false;
+
     float mX = 0.0f;
     float mY = 0.0f;
     float m_RX = 0.0f;
@@ -88,6 +90,20 @@ inline void pollInput(SDL_Event e, Input* in)
         if (e.key.scancode == SDL_SCANCODE_DOWN)
         {
             in->arDown = false;
+        }
+    }
+    if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+    {
+        if (e.button.button == SDL_BUTTON_LEFT) 
+        {
+            in->lmb = true;
+        }
+    }
+    if (e.type == SDL_EVENT_MOUSE_BUTTON_UP)
+    {
+        if (e.button.button == SDL_BUTTON_LEFT) 
+        {
+            in->lmb = false;
         }
     }
     if (e.type == SDL_EVENT_MOUSE_MOTION)

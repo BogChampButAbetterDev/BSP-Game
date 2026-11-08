@@ -29,7 +29,7 @@ struct Animation
     void setLooping(bool val) { m_loops = val; }
 
     void reset() { m_currentFrame = 0; m_timer = 0.0f; } 
-    bool isFinished() const { return m_currentFrame >= (int)m_frames.size() - 1 || m_timer >= m_frameTime; }
+    bool isFinished() const { return !m_loops && m_currentFrame >= (int)m_frames.size() - 1; }
 
     void update(float delta)
     {
