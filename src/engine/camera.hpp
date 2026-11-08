@@ -24,6 +24,7 @@ public:
 
     Vector3 camToWorldDir(Vector3 c) const;
 
+    Vector3 computeMove(float delta);
     void move(float delta);
 
     Vector3 getPos() const { return m_pos; }
@@ -37,6 +38,8 @@ public:
 
     float getCosPitch() const { return std::cos(deg2rad(m_pitch)); }
     float getSinPitch() const { return std::sin(deg2rad(m_pitch)); }
+
+    float getEyeHeight() const { return m_eyeHeight; }
 
     float getFocal() const { return (float)m_focalLen; }
     //float getHorizon() const { return HALF_HT - tanf(deg2rad(m_pitch)) * m_focalLen; }
@@ -57,7 +60,7 @@ public:
     float m_rotSpeed = 100.0f;
 
 private:
-    float m_eyeHeight = 1.7f;
+    float m_eyeHeight = 2.3f;
 
     int m_focalLen = HALF_WID;
     float m_near = 0.1f;

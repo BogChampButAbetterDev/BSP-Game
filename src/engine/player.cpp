@@ -1,11 +1,57 @@
 #include "player.hpp"
 
+static constexpr float GRAVITY       = 25.0f;
+static constexpr float STEP_UP_SPEED = 15.0f;
+
 Player::Player(Vector3 pos, SDL_Renderer* ren)
 {
     m_cam = std::make_unique<Camera>(pos);
     m_ren = ren;
 
     initAnims();
+}
+
+void Player::snapToFloor()
+{
+    if (!m_world) return;
+    if (const Sector* s = m_world->sectorAt({m_cam->m_pos.x, m_cam->m_pos.z}))
+    {
+        m_feetY = s->floorHt;
+        m_velY = 0.0f;
+        m_grounded = true;
+        m_cam->m_pos.y = m_feetY + m_cam->getEyeHeight();
+    }
+}
+
+void Player::updateVertical(float delta)
+{
+    if (!m_world) return;
+
+    const Sector* s = m_world->sectorAt({m_cam->m_pos.x, m_cam->m_pos.z});
+    if (!s) return;
+
+    float prev = m_feetY;
+
+    m_velY -= GRAVITY * delta;
+    m_feetY += m_velY * delta;
+
+    if (m_feetY + m_col.height > s->ceilingHt)
+    {
+        m_feetY = s->ceilingHt - m_col.height;
+        if (m_velY > 0.0f) m_velY = 0.0f;
+    }
+
+    if (m_feetY < s->floorHt)
+    {
+        if (prev >= s->floorHt - 0.01f)
+            m_feetY = s->floorHt;
+        else
+            m_feetY = std::min(s->floorHt, prev + STEP_UP_SPEED * delta); 
+        m_velY = 0.0f;
+    }
+
+    m_grounded = m_feetY <= s->floorHt + 0.01f;
+    m_cam->m_pos.y = m_feetY + m_cam->getEyeHeight();
 }
 
 void Player::update(float delta)
@@ -32,7 +78,18 @@ void Player::update(float delta)
 
     camPtr->m_direction = camPtr->m_direction.normalized();
 
-    m_cam->move(delta);
+    Vector3 d = m_cam->computeMove(delta);
+    if (m_world)
+    {
+        Vector2 p = m_world->move({m_cam->m_pos.x, m_cam->m_pos.z}, {d.x, d.z}, m_feetY, m_col);
+        m_cam->m_pos.x = p.x;
+        m_cam->m_pos.z = p.y;
+        updateVertical(delta);
+    }
+    else
+    {
+        m_cam->m_pos += d;
+    }
 
     if (camPtr->in.lmb)
     {
@@ -54,7 +111,7 @@ void Player::update(float delta)
 
 void Player::render()
 {
-    currAnim().renderFrame(m_ren, 585, 420);
+    currAnim().renderFrame(m_ren, 585, 403);
 }
 
 void Player::initAnims()

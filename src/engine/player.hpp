@@ -5,6 +5,7 @@
 
 #include <SDL3/SDL.h>
 
+#include "engine/collision.hpp"
 #include "globals/globals.hpp"
 #include "input.hpp"
 #include "camera.hpp"
@@ -21,12 +22,25 @@ public:
 
     Camera& getCam() const { return *m_cam; }
 
+    void setWorld(const CollisionWorld* w) { m_world = w; }
+
     void update(float delta);
     void render();
+
+    void snapToFloor();
 
 private:
     SDL_Renderer* m_ren = nullptr;
     std::unique_ptr<Camera> m_cam;
+
+    const CollisionWorld* m_world = nullptr;
+    CollisionParams m_col;
+
+    void updateVertical(float delta);
+
+    float m_feetY = 0.0f;
+    float m_velY = 0.0f;
+    bool  m_grounded = false;
 
     void initAnims();
 

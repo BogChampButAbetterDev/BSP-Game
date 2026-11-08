@@ -6,6 +6,7 @@
 #include "engine/player.hpp"
 #include "engine/input.hpp"
 #include "engine/mapLoader.hpp"
+#include "engine/collision.hpp"
 
 #include "engine/bsp/bsp_build.hpp"
 
@@ -44,6 +45,8 @@ private:
 
     MapLoader m_ml;
     Map m_map;
+
+    CollisionWorld m_world;
 
     GAME_STATE m_state = GAME_STATE::NONE;
 

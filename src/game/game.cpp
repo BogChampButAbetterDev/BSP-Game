@@ -32,7 +32,11 @@ void Game::run()
     m_map.tree = buildBSP(m_map.walls);
 
     m_play = Player({0, 0, 0}, m_sdlren);
+
+    m_world = CollisionWorld(&m_map.tree, &m_map.sectors);
+    m_play.setWorld(&m_world);
     m_map.onLoad(m_play.getCam());
+    m_play.snapToFloor();
 
     DirectionalLight light =
     {

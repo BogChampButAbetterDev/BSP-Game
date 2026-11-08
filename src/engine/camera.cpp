@@ -39,12 +39,16 @@ Vector3 Camera::camToWorldDir(Vector3 c) const
     return { c.x * cy + yz * sy, ry, -c.x * sy + yz * cy };
 }
 
-void Camera::move(float delta)
+Vector3 Camera::computeMove(float delta)
 {
     float yawRad = deg2rad(m_yaw);
     m_forward = {sinf(yawRad), 0, cosf(yawRad)};
     m_right = {cosf(yawRad), 0, -sinf(yawRad)};
 
-    m_pos += (m_forward * m_speed * delta) * m_direction.z;
-    m_pos += (m_right * m_speed * delta) * m_direction.x;
+    return (m_forward * m_speed * delta) * m_direction.z + (m_right   * m_speed * delta) * m_direction.x;
+}
+
+void Camera::move(float delta)
+{
+    m_pos += computeMove(delta);
 }
