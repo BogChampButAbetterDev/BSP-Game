@@ -31,7 +31,7 @@ void Game::run()
     m_ren.loadTextures(m_map.texturePaths);
     m_map.tree = buildBSP(m_map.walls);
 
-    m_play = Player({0, 0, 0});
+    m_play = Player({0, 0, 0}, m_sdlren);
     m_map.onLoad(m_play.getCam());
 
     DirectionalLight light =
@@ -81,6 +81,8 @@ void Game::run()
             m_ren.renderMap(m_map);
 
         m_ren.endRender();
+
+        m_play.render();
         SDL_RenderPresent(m_sdlren);
     }
 }

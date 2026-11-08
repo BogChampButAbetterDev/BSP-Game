@@ -1,8 +1,11 @@
 #include "player.hpp"
 
-Player::Player(Vector3 pos)
+Player::Player(Vector3 pos, SDL_Renderer* ren)
 {
     m_cam = std::make_unique<Camera>(pos);
+    m_ren = ren;
+
+    initAnims();
 }
 
 void Player::update(float delta)
@@ -30,4 +33,28 @@ void Player::update(float delta)
     camPtr->m_direction = camPtr->m_direction.normalized();
 
     m_cam->move(delta);
+
+    currAnim().update(delta);
+}
+
+void Player::render()
+{
+    currAnim().renderFrame(m_ren, 585, 420);
+}
+
+void Player::initAnims()
+{
+    handIdle.setImage("assets/hands/weaponspell1.png", m_ren);
+    handIdle.setRenderScale(5.5);
+    handIdle.setFrameTime(1.7);
+    handIdle.setLooping(true);
+    handIdle.addFrame({ 48, 2, 45, 36 });
+
+    spellBasic.setImage("assets/hands/weaponspell1.png", m_ren);
+    spellBasic.setRenderScale(5.5);
+    spellBasic.setFrameTime(1.7);
+    spellBasic.setLooping(false);
+    spellBasic.addFrame({ 48, 2, 45, 36 });
+    spellBasic.addFrame({ 10, 45, 47, 41 });
+    spellBasic.addFrame({ 96, 41, 49, 44 });
 }
