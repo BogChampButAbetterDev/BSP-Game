@@ -41,6 +41,7 @@ private:
     float m_feetY = 0.0f;
     float m_velY = 0.0f;
     bool  m_grounded = false;
+    bool m_prevJump = false;
 
     void initAnims();
 

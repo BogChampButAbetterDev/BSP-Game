@@ -24,6 +24,8 @@ build/
 # VS Code
 .vscode/
 
+editor/
+
 Weekend_Plans.md
 
 # Backgrounds folder is too large and most are unused

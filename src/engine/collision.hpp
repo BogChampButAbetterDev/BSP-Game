@@ -111,24 +111,24 @@ public:
     const Sector* sectorAt(Vector2 p) const
     {
         std::vector<const Wall*> walls;
-        for (float r = 2.0f; r <= 256.0f; r *= 2.0f)
+        for (float r = 2.0f; r <= 256.0f; r *= 2.0f) 
         {
             walls.clear();
             m_bsp.queryWalls(p, r, walls);
 
             const Wall* best = nullptr;
+            int bestId = -1;
             float bestD2 = r * r;
             for (const Wall* w : walls)
             {
+                int id = w->line.sideOf(p) > 0 ? w->frontSect : w->backSect;
+                if (id < 0) continue; 
+
                 float d2 = (p - closestPointOnSegment(w->line, p)).len_squared();
-                if (d2 < bestD2) { bestD2 = d2; best = w; }
+                if (d2 < bestD2) { bestD2 = d2; best = w; bestId = id; }
             }
 
-            if (best)
-            {
-                int id = best->line.sideOf(p) > 0 ? best->frontSect : best->backSect;
-                return id >= 0 ? &(*m_sectors)[id] : nullptr;
-            }
+            if (best) return &(*m_sectors)[bestId];
         }
         return nullptr;
     }

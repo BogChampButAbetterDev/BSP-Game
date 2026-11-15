@@ -2,6 +2,7 @@
 
 static constexpr float GRAVITY       = 25.0f;
 static constexpr float STEP_UP_SPEED = 15.0f;
+static constexpr float JUMP_STRENGTH = 8.0f;
 
 Player::Player(Vector3 pos, SDL_Renderer* ren)
 {
@@ -84,6 +85,14 @@ void Player::update(float delta)
         Vector2 p = m_world->move({m_cam->m_pos.x, m_cam->m_pos.z}, {d.x, d.z}, m_feetY, m_col);
         m_cam->m_pos.x = p.x;
         m_cam->m_pos.z = p.y;
+
+        bool jumpPressed = camPtr->in.space && !m_prevJump;
+        m_prevJump = camPtr->in.space;
+        if (jumpPressed && m_grounded) 
+        {
+            m_velY = JUMP_STRENGTH; m_grounded = false;
+        }
+
         updateVertical(delta);
     }
     else

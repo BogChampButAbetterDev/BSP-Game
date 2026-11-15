@@ -11,6 +11,7 @@ struct Input
     bool arR = false;
     bool arUp = false;
     bool arDown = false;
+    bool space = false;
 
     bool lmb = false;
 
@@ -39,6 +40,10 @@ inline void pollInput(SDL_Event e, Input* in)
         if (e.key.scancode == SDL_SCANCODE_D)
         {
             in->d = true;
+        }
+        if (e.key.scancode == SDL_SCANCODE_SPACE)
+        {
+            in->space = true;
         }
         if (e.key.scancode == SDL_SCANCODE_LEFT)
         {
@@ -74,6 +79,10 @@ inline void pollInput(SDL_Event e, Input* in)
         if (e.key.scancode == SDL_SCANCODE_D)
         {
             in->d = false;
+        }
+        if (e.key.scancode == SDL_SCANCODE_SPACE)
+        {
+            in->space = false;
         }
         if (e.key.scancode == SDL_SCANCODE_LEFT)
         {
