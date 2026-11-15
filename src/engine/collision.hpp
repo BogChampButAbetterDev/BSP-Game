@@ -122,6 +122,8 @@ public:
             for (const Wall* w : walls)
             {
                 int id = w->line.sideOf(p) > 0 ? w->frontSect : w->backSect;
+                
+                if (id < 0 && w->doubleSided) id = w->frontSect;
                 if (id < 0) continue; 
 
                 float d2 = (p - closestPointOnSegment(w->line, p)).len_squared();

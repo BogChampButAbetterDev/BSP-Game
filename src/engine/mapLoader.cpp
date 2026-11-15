@@ -74,10 +74,11 @@ Map MapLoader::read()
                 parseState = ParseState::ExpectSectorData;
                 m_pendingNumbers.clear();
             }
-            else if (word == "WALL")
+            else if (word == "WALL" || word == "DWALL")
             {
                 parseState = ParseState::ExpectWallData;
                 m_pendingNumbers.clear();
+                m_nextDouble = (word == "DWALL");   // DWALL = visible from both sides
             }
             else if (word == "TEXTURE")
             {
@@ -232,6 +233,7 @@ bool MapLoader::parseWalls(float value, Map& out, int texId)
     wall.top    = out.sectors[wall.frontSect].ceilingHt;
 
     wall.computeNormal();
+    wall.doubleSided = m_nextDouble && wall.backSect < 0;   // portals are already two-sided
 
     // u runs from length/TEX_WORLD_W at the start down to 0 at the end, so the
     // texture isn't mirrored when you face the front of the wall.

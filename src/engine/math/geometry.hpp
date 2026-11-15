@@ -42,6 +42,8 @@ struct Wall
     int frontSect = -1;
     int backSect = -1;
 
+    bool doubleSided = false;
+
     float UStart = 0.0f;
     float UEnd = 1.0f;
 

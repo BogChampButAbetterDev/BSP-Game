@@ -59,6 +59,7 @@ private:
     std::string mapData = "";
 
     std::vector<float> m_pendingNumbers;
+    bool m_nextDouble = false;   // set by the DWALL keyword
 
     bool parseSector(float value, Map& out);
     bool parseWalls(float value, Map& out, int texId);

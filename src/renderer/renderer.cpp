@@ -57,14 +57,23 @@ void Renderer::renderMap(const Map& map)
         float side = w.line.sideOf(camFloorPos);
         if (side == 0) continue;
         bool frontFacing = side > 0;
-        bool twoSided = w.backSect >= 0;
-        if (!twoSided && !frontFacing) continue;
+        bool portal = w.backSect >= 0;
+        if (!portal && !w.doubleSided && !frontFacing) continue;
 
         Wall draw = w;
-        int nearIdx = frontFacing ? w.frontSect : w.backSect;
+        int nearIdx, farIdx;
+        if (w.doubleSided && !portal)
+        {
+            nearIdx = w.frontSect;
+            farIdx  = -1;
+        }
+        else
+        {
+            nearIdx = frontFacing ? w.frontSect : w.backSect;
+            farIdx  = frontFacing ? w.backSect  : w.frontSect;
+        }
         m_buf.drawSector = nearIdx;
 
-        int farIdx  = frontFacing ? w.backSect  : w.frontSect;
         if (!frontFacing) { std::swap(draw.UStart, draw.UEnd); draw.normal = -draw.normal; }
 
         const Sector& nearSec = map.sectors[nearIdx];
@@ -123,6 +132,7 @@ static int castSector(const Map& map, Vector2 p, Vector2 d)
         {
             best = t;
             sec = (w.line.sideOf(p) > 0) ? w.frontSect : w.backSect;
+            if (sec < 0 && w.doubleSided) sec = w.frontSect;
         }
     }
     return sec;
@@ -199,7 +209,7 @@ void Renderer::renderMapDBGCLR(const Map& map)
     BSPTraverse(map.tree, map.tree.root, camFloorPos, *m_renOrder);
     for (size_t i = 0; i < m_renOrder->size(); i++)
     {
-        if ((*m_renOrder)[i].cullWall(camFloorPos)) continue;
+        if (!(*m_renOrder)[i].doubleSided && (*m_renOrder)[i].cullWall(camFloorPos)) continue;
         m_buf.setDrawColor(applyLighting(debugColor(i), m_light, (*m_renOrder)[i]));
         fillWall(&m_buf, (*m_renOrder)[i]);
     }
