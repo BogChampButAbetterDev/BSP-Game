@@ -26,7 +26,8 @@ inline void BSPTraverse(const BSPTree& tree, int nodeIDX, Vector2 posXZ, std::ve
     BSPTraverse(tree, near, posXZ, order);
     for (const Wall& w : node.coplanarWalls)
     {
-        if (!w.doubleSided && w.cullWall(posXZ)) continue;
+        bool portal = w.backSect >= 0;
+        if (!portal && !w.doubleSided && w.cullWall(posXZ)) continue;
         order.push_back(w);
     }
     BSPTraverse(tree, far, posXZ, order);

@@ -13,6 +13,7 @@
 #include "engine/mapLoader.hpp"
 #include "engine/lighting.hpp"
 #include "engine/texture.hpp"
+#include "engine/sky.hpp"
 
 class Renderer
 {
@@ -25,6 +26,8 @@ public:
 
     void regLight(const DirectionalLight& light) { m_light = light; m_light.dir = m_light.dir.normalized();}
     void loadTextures(const std::vector<std::string>& paths);
+    void loadSkyTexture(const std::string& path);
+    void loadSkyFaces(const std::vector<std::string>& paths);
 
     void beginRender();
     void renderMap(const Map& map);
@@ -47,8 +50,16 @@ private:
     Texture m_defaultTex;
     Texture m_defaultFloor;
     Texture m_defaultCeil;
+    Texture m_defaultSky;
+
+    Texture m_skyTex;
+    SkyBox m_sky;
     
     DirectionalLight m_light;
+
+    bool m_sectorDBG = true;
+
+    bool loadPNG(const std::string& path, Texture& out);
 
     int updateCameraSector(const Map& map, Vector2 p);
 

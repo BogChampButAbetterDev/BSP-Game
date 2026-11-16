@@ -1,39 +1,55 @@
 #include "renderer.hpp"
 
+bool Renderer::loadPNG(const std::string& path, Texture& out)
+{
+    SDL_Surface* loaded = SDL_LoadPNG(path.c_str());
+    if (!loaded)
+    {
+        std::cerr << "Texture loading failure: " << SDL_GetError() << " " << path << "\n";
+        return false;
+    }
+    SDL_Surface* conv = SDL_ConvertSurface(loaded, SDL_PIXELFORMAT_ABGR8888);
+    SDL_DestroySurface(loaded);
+    if (!conv) return false;
+
+    out.width = conv->w;
+    out.height = conv->h;
+    out.pixels.resize(out.width * out.height);
+    for (int y = 0; y < out.height; y++)
+    {
+        const uint8_t* src = (const uint8_t*)conv->pixels + y * conv->pitch;
+        std::memcpy(&out.pixels[y * out.width], src, out.width * sizeof(uint32_t));
+    }
+    SDL_DestroySurface(conv);
+    return true;
+}
+
 void Renderer::loadTextures(const std::vector<std::string>& paths)
 {
-    for (Texture *t : {&m_defaultTex, &m_defaultFloor, &m_defaultCeil})
+    for (Texture* t : {&m_defaultTex, &m_defaultFloor, &m_defaultCeil})
     {
-        t->width = 64;
-        t->height = 64;
+        t->width = 64; t->height = 64;
         t->pixels.resize(64 * 64);
         t->genChecker();
     }
-
     for (const std::string& p : paths)
     {
-        SDL_Surface* loaded = SDL_LoadPNG(p.c_str());
-        if (!loaded) 
-        { 
-            std::cerr << "Texture loading failure: " << SDL_GetError() << " " << p << "\n"; 
-            m_textures.push_back(m_defaultTex);
-            continue;
-        }
-
-        SDL_Surface* converted = SDL_ConvertSurface(loaded, SDL_PIXELFORMAT_ABGR8888);
-        SDL_DestroySurface(loaded);
         Texture tex;
-        tex.width = converted->w;
-        tex.height = converted->h;
-        tex.pixels.resize(tex.width * tex.height);
-        for (int y = 0; y < tex.height; y++)
-        {
-            const uint8_t* src = (const uint8_t*)converted->pixels + y * converted->pitch;
-            std::memcpy(&tex.pixels[y * tex.width], src, tex.width * sizeof(uint32_t));
-        }
-        m_textures.push_back(tex);
-        SDL_DestroySurface(converted);
+        m_textures.push_back(loadPNG(p, tex) ? tex : m_defaultTex);
     }
+}
+
+void Renderer::loadSkyFaces(const std::vector<std::string>& paths)
+{
+    m_sky.valid = false;
+    if (paths.size() != NUM_FACES)
+    {
+        std::cerr << "Sky needs " << NUM_FACES << " faces, got " << paths.size() << "\n";
+        return;
+    }
+    for (int i = 0; i < NUM_FACES; i++)
+        if (!loadPNG(paths[i], m_sky.faces[i])) return;   // stay on the gradient fallback
+    m_sky.valid = true;
 }
 
 void Renderer::beginRender()
@@ -79,32 +95,47 @@ void Renderer::renderMap(const Map& map)
         const Sector& nearSec = map.sectors[nearIdx];
         float s = shade(draw.normal, m_light) * nearSec.light;
 
-        struct Piece { float bottom, top; };
-        Piece pieces[2]; int pieceCount = 0;
+        struct Piece
+        {
+            float bS, bE, tS, tE;
+        };
+        Piece pieces[2];
+        int pieceCount = 0;
+
+        Vector2 a = w.line.start, b = w.line.end;
+        float nfA = nearSec.floorAt(a), nfB = nearSec.floorAt(b);
+        float ncA = nearSec.ceilAt(a), ncB = nearSec.ceilAt(b);
 
         if (farIdx < 0)
-            pieces[pieceCount++] = { nearSec.floorHt, nearSec.ceilingHt };
+            pieces[pieceCount++] = {nfA, nfB, ncA, ncB};
         else
         {
-            const Sector& farSec = map.sectors[farIdx];
-            if (farSec.floorHt > nearSec.floorHt)
-                pieces[pieceCount++] = { nearSec.floorHt, farSec.floorHt };
-            if (farSec.ceilingHt < nearSec.ceilingHt)
-                pieces[pieceCount++] = { farSec.ceilingHt, nearSec.ceilingHt };
+            const Sector &farSec = map.sectors[farIdx];
+            float ffA = farSec.floorAt(a), ffB = farSec.floorAt(b);
+            float fcA = farSec.ceilAt(a), fcB = farSec.ceilAt(b);
 
-            float oBottom = std::max(nearSec.floorHt, farSec.floorHt);
-            float oTop    = std::min(nearSec.ceilingHt, farSec.ceilingHt);
-            if (oTop > oBottom) markOpening(&m_buf, draw, oBottom, oTop, nearIdx, farIdx, camSector);
+            if (ffA > nfA || ffB > nfB)
+                pieces[pieceCount++] = {nfA, nfB, std::max(ffA, nfA), std::max(ffB, nfB)};
+
+            bool bothSky = nearSec.sky && farSec.sky;
+            if (!bothSky && (fcA < ncA || fcB < ncB))
+                pieces[pieceCount++] = {std::min(fcA, ncA), std::min(fcB, ncB), ncA, ncB};
+
+            float obA = std::max(nfA, ffA), obB = std::max(nfB, ffB);
+            float otA = std::min(ncA, fcA), otB = std::min(ncB, fcB);
+            if (otA > obA || otB > obB)
+                markOpening(&m_buf, draw, obA, obB, otA, otB, nearIdx, farIdx, camSector);
         }
 
         for (int i = 0; i < pieceCount; i++)
         {
-            draw.bottom = pieces[i].bottom;
-            draw.top = pieces[i].top;
+            const Piece &p = pieces[i];
             if (w.texId >= 0 && w.texId < (int)m_textures.size())
-                fillWallTextured(&m_buf, draw, m_textures[w.texId], s, draw.bottom, draw.top);
+                fillWallTextured(&m_buf, draw, m_textures[w.texId], s, p.bS, p.bE, p.tS, p.tE);
             else
             {
+                draw.bottom = p.bS;
+                draw.top = p.tS;
                 m_buf.setDrawColor(applyLighting(baseColor, m_light, draw));
                 fillWall(&m_buf, draw);
             }
@@ -112,6 +143,21 @@ void Renderer::renderMap(const Map& map)
     }
 
     m_buf.drawSector = -1;
+
+    // if (m_sectorDBG)
+    // {
+    //     for (int i = 0; i < DEF_WIN_WIDTH * DEF_WIN_HEIGHT; i++)
+    //     {
+    //         if (m_buf.covered[i]) continue;
+    //         int sec = m_buf.sectorAt[i];
+    //         if (sec < 0) { m_buf.pixels[i] = rgb(40, 40, 40); continue; }
+    //         m_buf.pixels[i] = rgb((uint8_t)(60 + (sec * 50) % 195),
+    //                             100,
+    //                             (uint8_t)(200 - (sec * 40) % 150));
+    //     }
+    //     return;
+    // }
+
     drawFlats(map, camSector);
 }
 
@@ -174,27 +220,49 @@ void Renderer::drawFlats(const Map& map, int camSector)
         for (int x = 0; x < DEF_WIN_WIDTH; x++)
         {
             int i = y * DEF_WIN_WIDTH + x;
-            if (m_buf.covered[i]) continue;
+            if (m_buf.covered[i])
+                continue;
 
             int sec = m_buf.sectorAt[i];
-            //bool tagged = sec >= 0;
-            //if (!tagged) sec = camSector;
-            if (sec < 0) sec = camSector;
-            if (sec < 0) continue;
-            const Sector& S = map.sectors[sec];
 
+            if (sec < 0)
+                sec = camSector;
+            if (sec < 0)
+                continue;
+            const Sector &S = map.sectors[sec];
             float xn = (x + 0.5f - HALF_WID) / f;
             Vector3 dir = fwd + right * xn + up * yn;
 
-            bool ceil = dir.y > 0;
-            float h = ceil ? S.ceilingHt : S.floorHt;
-            float dy = h - pos.y;
-            if (std::abs(dir.y) < 1e-6f || (dy > 0) != ceil) continue;
+            auto hit = [&](float h0, Vector2 g, Vector2 o) -> float
+            {
+                float denom = dir.y - g.x * dir.x - g.y * dir.z;
+                if (std::abs(denom) < 1e-6f)
+                    return -1.0f;
+                float num = h0 + g.x * (pos.x - o.x) + g.y * (pos.z - o.y) - pos.y;
+                return num / denom;
+            };
 
-            float t = dy / dir.y;
+            float tf = hit(S.floorHt, S.floorGrad, S.floorOrigin);
+            float tc = hit(S.ceilingHt, S.ceilGrad, S.ceilOrigin);
+
+            bool useCeil;
+            if (tf > 0 && (tc <= 0 || tf < tc))
+                useCeil = false;
+            else if (tc > 0)
+                useCeil = true;
+            else
+                continue;
+            float t = useCeil ? tc : tf;
+
+            if (useCeil && S.sky)
+            {
+                m_buf.pixels[i] = m_sky.sample(dir);
+                continue;
+            }
+
             float wx = pos.x + dir.x * t, wz = pos.z + dir.z * t;
-            const Texture& tex = ceil ? pick(S.ceilingTexId, m_defaultCeil)
-                                      : pick(S.floorTexId,   m_defaultFloor);
+            const Texture &tex = useCeil ? pick(S.ceilingTexId, m_defaultCeil)
+                                         : pick(S.floorTexId, m_defaultFloor);
             m_buf.pixels[i] = scaleColor(tex.sample(wx / TEX_WORLD_H, wz / TEX_WORLD_H), S.light);
         }
     }

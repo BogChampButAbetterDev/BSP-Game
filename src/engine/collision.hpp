@@ -136,18 +136,23 @@ public:
     }
 
 private:
-    bool wallBlocks(const Wall& w, Vector2 p, float feetY, const CollisionParams& cp) const
+    bool wallBlocks(const Wall &w, Vector2 p, float feetY, const CollisionParams &colPar) const
     {
-        if (w.backSect < 0 || w.frontSect < 0) return true;      // solid wall
+        if (w.backSect < 0 || w.frontSect < 0)
+            return true;
 
         bool onFront = w.line.sideOf(p) > 0;
-        const Sector& dest = (*m_sectors)[onFront ? w.backSect : w.frontSect];
-        const Sector& src  = (*m_sectors)[onFront ? w.frontSect : w.backSect];
+        const Sector &dest = (*m_sectors)[onFront ? w.backSect : w.frontSect];
+        const Sector &src = (*m_sectors)[onFront ? w.frontSect : w.backSect];
 
-        float gap = dest.ceilingHt - std::max(dest.floorHt, src.floorHt);
-        if (gap < cp.height) return true;                        // too low to fit
-        if (dest.floorHt - feetY > cp.stepHeight) return true;   // ledge too high
-        return false;                                            // open portal
+        Vector2 q = closestPointOnSegment(w.line, p);
+        float destFloor = dest.floorAt(q), srcFloor = src.floorAt(q);
+        float gap = dest.ceilAt(q) - std::max(destFloor, srcFloor);
+        if (gap < colPar.height)
+            return true;
+        if (destFloor - feetY > colPar.stepHeight)
+            return true;
+        return false;
     }
 
     BSPWorld m_bsp;

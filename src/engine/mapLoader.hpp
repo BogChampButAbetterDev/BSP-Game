@@ -29,6 +29,7 @@ struct Map
     }
 
     std::vector<std::string> texturePaths;
+    std::vector<std::string> skyPaths;
 
     BSPTree tree;
 
@@ -44,7 +45,9 @@ enum class ParseState
     ExpectMapName,
     ExpectPlayerPos,
     ExpectSectorData,
-    ExpectWallData
+    ExpectWallData,
+    ExpectSlopeData,
+    ExpectSkyId
 };
 
 class MapLoader
@@ -56,11 +59,16 @@ public:
     Map read();
 
 private:
+    ParseState m_parseState = ParseState::None;
+
     std::string mapData = "";
 
     std::vector<float> m_pendingNumbers;
     bool m_nextDouble = false;   // set by the DWALL keyword
 
+    bool m_slopeCeil = false;
+
     bool parseSector(float value, Map& out);
     bool parseWalls(float value, Map& out, int texId);
+    bool parseSlope(float value, Map& out);
 };

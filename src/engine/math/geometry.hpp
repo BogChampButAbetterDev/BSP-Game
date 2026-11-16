@@ -27,6 +27,16 @@ struct Sector
     int ceilingTexId = -1;
 
     float light = 0.0f;
+
+    Vector2 floorGrad = {0, 0};
+    Vector2 floorOrigin = {0, 0};
+    Vector2 ceilGrad = {0, 0};
+    Vector2 ceilOrigin = {0, 0};
+
+    bool sky = false;
+
+    float floorAt(Vector2 p) const { return floorHt   + floorGrad.dot(p - floorOrigin); }
+    float ceilAt (Vector2 p) const { return ceilingHt + ceilGrad.dot(p - ceilOrigin); }
 };
 
 struct Wall

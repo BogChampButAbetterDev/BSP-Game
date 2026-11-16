@@ -39,7 +39,6 @@ MapLoader::MapLoader(const std::string &filename)
 Map MapLoader::read()
 {
     if (mapData.length() <= 0) return {};
-    ParseState parseState = ParseState::None;
     int currentTexture = -1;   // -1 = no TEXTURE line seen yet (flat color)
 
     Map out;
@@ -62,27 +61,27 @@ Map MapLoader::read()
 
             if (word == "MAP")
             {
-                parseState = ParseState::ExpectMapName;
+                m_parseState = ParseState::ExpectMapName;
             }
             else if (word == "PLAYER")
             {
-                parseState = ParseState::ExpectPlayerPos;
+                m_parseState = ParseState::ExpectPlayerPos;
                 m_pendingNumbers.clear();
             }
             else if (word == "SECTOR")
             {
-                parseState = ParseState::ExpectSectorData;
+                m_parseState = ParseState::ExpectSectorData;
                 m_pendingNumbers.clear();
             }
             else if (word == "WALL" || word == "DWALL")
             {
-                parseState = ParseState::ExpectWallData;
+                m_parseState = ParseState::ExpectWallData;
                 m_pendingNumbers.clear();
                 m_nextDouble = (word == "DWALL");   // DWALL = visible from both sides
             }
             else if (word == "TEXTURE")
             {
-                parseState = ParseState::None;
+                m_parseState = ParseState::None;
                 m_pendingNumbers.clear();
 
                 // Paths contain digits, dots, underscores and spaces, which the
@@ -103,10 +102,42 @@ Map MapLoader::read()
 
                 currentTexture = textureIndex(out, path);
             }
-            else if (parseState == ParseState::ExpectMapName)
+            else if (word == "FLOORSLOPE" || word == "CEILSLOPE")
+            {
+                m_parseState = ParseState::ExpectSlopeData;
+                m_pendingNumbers.clear();
+                m_slopeCeil = (word == "CEILSLOPE");
+            }
+            else if (word == "SKY")
+            {
+                m_parseState = ParseState::ExpectSkyId;
+                m_pendingNumbers.clear();
+            }
+            else if (word == "SKYFACE")
+            {
+                m_parseState = ParseState::None;
+                m_pendingNumbers.clear();
+
+                while (i < mapData.length() && (mapData[i] == ' ' || mapData[i] == '\t')) { i++; }
+
+                size_t pathStart = i;
+                while (i < mapData.length() && mapData[i] != '\n' && mapData[i] != '\r') { i++; }
+
+                std::string path = mapData.substr(pathStart, i - pathStart);
+                while (!path.empty() && (path.back() == ' ' || path.back() == '\t')) { path.pop_back(); }
+
+                if (path.empty())
+                {
+                    std::cerr << "Map parse failure: SKYFACE with no path\n";
+                    return {};
+                }
+
+                out.skyPaths.push_back(path);
+            }
+            else if (m_parseState == ParseState::ExpectMapName)
             {
                 out.name = word;
-                parseState = ParseState::None;
+                m_parseState = ParseState::None;
             }
             else
             {
@@ -138,29 +169,40 @@ Map MapLoader::read()
                 return {};
             }
 
-            if (parseState == ParseState::ExpectPlayerPos)
+            if (m_parseState == ParseState::ExpectPlayerPos)
             {
                 m_pendingNumbers.push_back(value);
                 if (m_pendingNumbers.size() == 3)
                 {
                     out.playerPos = {m_pendingNumbers[0], m_pendingNumbers[1], m_pendingNumbers[2]};
-                    parseState = ParseState::None;
+                    m_parseState = ParseState::None;
                     m_pendingNumbers.clear();
                 }
             }
-            else if (parseState == ParseState::ExpectSectorData)
+            else if (m_parseState == ParseState::ExpectSectorData)
             {
                 if (!parseSector(value, out))
                 {
                     return {};   // error already printed
                 }
             }
-            else if (parseState == ParseState::ExpectWallData)
+            else if (m_parseState == ParseState::ExpectWallData)
             {
                 if (!parseWalls(value, out, currentTexture))
                 {
                     return {};   // error already printed
                 }
+            }
+            else if (m_parseState == ParseState::ExpectSlopeData)
+            {
+                if (!parseSlope(value, out)) return {};
+            }
+            else if (m_parseState == ParseState::ExpectSkyId)
+            {
+                int slot = out.slotOfSector((int)value);
+                if (slot < 0) { std::cerr << "SKY: Unknown Sector: " << value << "\n"; return {}; }
+                out.sectors[slot].sky = true;
+                m_parseState = ParseState::None;
             }
 
             i--;
@@ -242,5 +284,33 @@ bool MapLoader::parseWalls(float value, Map& out, int texId)
 
     out.walls.push_back(wall);
     m_pendingNumbers.clear();
+    return true;
+}
+
+bool MapLoader::parseSlope(float value, Map &out)
+{
+    m_pendingNumbers.push_back(value);
+    if (m_pendingNumbers.size() < 5) return true;
+
+    int slot = out.slotOfSector((int)m_pendingNumbers[0]);
+    if (slot < 0) { std::cerr << "Map parse Failure: slope on undefined sector\n"; return false; }
+
+    Sector& s = out.sectors[slot];
+    Vector2 g = { m_pendingNumbers[1], m_pendingNumbers[2] };
+    Vector2 o = { m_pendingNumbers[3], m_pendingNumbers[4] };
+
+    if (m_slopeCeil) 
+    { 
+        s.ceilGrad = g; 
+        s.ceilOrigin = o; 
+    }
+    else 
+    {
+        s.floorGrad = g; 
+        s.floorOrigin = o; 
+    }
+
+    m_pendingNumbers.clear();
+    m_parseState = ParseState::None;
     return true;
 }

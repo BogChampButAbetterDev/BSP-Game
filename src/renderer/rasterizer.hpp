@@ -130,18 +130,18 @@ inline void scanConvex(std::span<const Vector2> verts, F&& visit)
     }
 }
 
-inline void markOpening(Framebuffer* buf, const Wall& w, float bottom, float top, int nearSector, int farSector, int camSector)
+inline void markOpening(Framebuffer* buf, const Wall& w, float bS, float bE, float tS, float tE, int nearSector, int farSector, int camSector)
 {
     Camera* cam = buf->activeCamera;
     Vector3 c[4] =
     {
-        cam->toCamSpace({w.line.start.x, top,    w.line.start.y}),
-        cam->toCamSpace({w.line.end.x,   top,    w.line.end.y}),
-        cam->toCamSpace({w.line.end.x,   bottom, w.line.end.y}),
-        cam->toCamSpace({w.line.start.x, bottom, w.line.start.y}),
+        cam->toCamSpace({w.line.start.x, tS,    w.line.start.y}),
+        cam->toCamSpace({w.line.end.x,   tE,    w.line.end.y}),
+        cam->toCamSpace({w.line.end.x,   bE,    w.line.end.y}),
+        cam->toCamSpace({w.line.start.x, bS,    w.line.start.y}),
     };
     Vector3 clipped[MAX_CLIP_VERTS];
-    int n = clipNear(c, 4, 1e-3f, clipped);
+    int n = clipNear(c, 4, 1e-4f, clipped);
     if (n < 3) return;
     Vector2 p[MAX_CLIP_VERTS];
     for (int i = 0; i < n; i++) p[i] = cam->projectCamSpace(clipped[i]);
@@ -287,19 +287,15 @@ inline void fillWall(Framebuffer* buf, Wall wall)
     fillConvexPolygon(buf, std::span<const Vector2>(vertsProj.data(), count));
 }
 
-inline void fillWallTextured(Framebuffer* buf, Wall wall, const Texture& tex, float shade, float yBottom, float yTop)
+inline void fillWallTextured(Framebuffer* buf, Wall wall, const Texture& tex, float shade, float bS, float bE, float tS, float tE)
 {
     Camera* cam = buf->activeCamera;
-
-    float vTop = -yTop / TEX_WORLD_H;
-    float vBottom = -yBottom / TEX_WORLD_H;
-
     ClipVertex corners[4] =
     {
-        { cam->toCamSpace({wall.line.start.x, wall.top,    wall.line.start.y}), wall.UStart, vTop    },
-        { cam->toCamSpace({wall.line.end.x,   wall.top,    wall.line.end.y}),   wall.UEnd,   vTop    },
-        { cam->toCamSpace({wall.line.end.x,   wall.bottom, wall.line.end.y}),   wall.UEnd,   vBottom },
-        { cam->toCamSpace({wall.line.start.x, wall.bottom, wall.line.start.y}), wall.UStart, vBottom },
+        { cam->toCamSpace({wall.line.start.x, tS, wall.line.start.y}), wall.UStart, -tS / TEX_WORLD_H },
+        { cam->toCamSpace({wall.line.end.x,   tE, wall.line.end.y}),   wall.UEnd,   -tE / TEX_WORLD_H },
+        { cam->toCamSpace({wall.line.end.x,   bE, wall.line.end.y}),   wall.UEnd,   -bE / TEX_WORLD_H },
+        { cam->toCamSpace({wall.line.start.x, bS, wall.line.start.y}), wall.UStart, -bS / TEX_WORLD_H },
     };
 
     ClipVertex clipped[MAX_CLIP_VERTS];

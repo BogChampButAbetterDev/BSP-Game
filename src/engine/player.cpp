@@ -17,7 +17,7 @@ void Player::snapToFloor()
     if (!m_world) return;
     if (const Sector* s = m_world->sectorAt({m_cam->m_pos.x, m_cam->m_pos.z}))
     {
-        m_feetY = s->floorHt;
+        m_feetY = s->floorAt({m_cam->m_pos.x, m_cam->m_pos.z});
         m_velY = 0.0f;
         m_grounded = true;
         m_cam->m_pos.y = m_feetY + m_cam->getEyeHeight();
@@ -27,31 +27,37 @@ void Player::snapToFloor()
 void Player::updateVertical(float delta)
 {
     if (!m_world) return;
-
-    const Sector* s = m_world->sectorAt({m_cam->m_pos.x, m_cam->m_pos.z});
+    Vector2 pp{m_cam->m_pos.x, m_cam->m_pos.z};
+    const Sector* s = m_world->sectorAt(pp);
     if (!s) return;
 
+    float fl = s->floorAt(pp), cl = s->ceilAt(pp);
     float prev = m_feetY;
+    bool wasGrounded = m_grounded;
 
     m_velY -= GRAVITY * delta;
     m_feetY += m_velY * delta;
 
-    if (m_feetY + m_col.height > s->ceilingHt)
+    if (wasGrounded && m_velY <= 0.0f && m_feetY > fl && m_feetY - fl < m_col.stepHeight)
     {
-        m_feetY = s->ceilingHt - m_col.height;
-        if (m_velY > 0.0f) m_velY = 0.0f;
-    }
-
-    if (m_feetY < s->floorHt)
-    {
-        if (prev >= s->floorHt - 0.01f)
-            m_feetY = s->floorHt;
-        else
-            m_feetY = std::min(s->floorHt, prev + STEP_UP_SPEED * delta); 
+        m_feetY = fl;
         m_velY = 0.0f;
     }
 
-    m_grounded = m_feetY <= s->floorHt + 0.01f;
+    if (m_feetY + m_col.height > cl)
+    {
+        m_feetY = cl - m_col.height;
+        if (m_velY > 0.0f) m_velY = 0.0f;
+    }
+
+    if (m_feetY < fl)
+    {
+        if (prev >= fl - 0.01f) m_feetY = fl;
+        else m_feetY = std::min(fl, prev + STEP_UP_SPEED * delta);
+        m_velY = 0.0f;
+    }
+
+    m_grounded = m_feetY <= fl + 0.01f;
     m_cam->m_pos.y = m_feetY + m_cam->getEyeHeight();
 }
 

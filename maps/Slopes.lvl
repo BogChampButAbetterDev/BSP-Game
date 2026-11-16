@@ -1,0 +1,49 @@
+MAP Slope
+
+PLAYER 0 0.5 0
+
+SECTOR 0 0 5.95 0.8 0 0
+SECTOR 1 1.55 6 0.8 0 0
+SECTOR 2 2.95 13.5 0.8 0 0
+SECTOR 3 3.05 7.7 0.8 0 0
+SECTOR 4 3.05 7.7 0.8 0 0
+SKY 0
+FLOORSLOPE 1 0.011519 0.6599 0 6.75
+SKY 1
+FLOORSLOPE 3 1.799726 0.031414 0 6.75
+FLOORSLOPE 4 -0.049992 -0.000873 0 6.75
+SKYFACE assets/skies/blink/right.png
+SKYFACE assets/skies/blink/left.png
+SKYFACE assets/skies/blink/top.png
+SKYFACE assets/skies/blink/bottom.png
+SKYFACE assets/skies/blink/front.png
+SKYFACE assets/skies/blink/back.png
+
+TEXTURE assets/Textures/Stone_bricks.png
+WALL -6 -4 6 -4 0 -1
+WALL 6 -4 6 4.5 0 -1
+WALL -6 4.5 -6 -4 0 -1
+WALL 6 4.5 6 9 1 -1
+WALL -6 9 -6 4.5 1 -1
+WALL 6 4.5 -6 4.5 0 1
+
+TEXTURE assets/Textures/Stone slabs.png
+WALL 23 9 23 27 2 -1
+WALL 23 27 23 9 2 -1
+WALL 23 27 -22 27 2 -1
+WALL -22 27 23 27 2 -1
+WALL -22 27 -22 9 2 -1
+WALL -22 9 -22 27 2 -1
+WALL -22 9 -6 9 2 -1
+WALL -6 9 -22 9 2 -1
+WALL 6 9 23 9 2 -1
+WALL 23 9 6 9 2 -1
+
+TEXTURE assets/Textures/Stone_bricks.png
+WALL 6 9 -6 9 1 2
+
+TEXTURE assets/Textures/Crystal 3.png
+WALL 4 15 -3.5 15 4 -1
+WALL 4 19.5 4 15 4 -1
+WALL -3.5 19.5 4 19.5 4 -1
+WALL -3.5 15 -3.5 19.5 4 -1
