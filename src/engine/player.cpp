@@ -4,6 +4,15 @@ static constexpr float GRAVITY       = 25.0f;
 static constexpr float STEP_UP_SPEED = 15.0f;
 static constexpr float JUMP_STRENGTH = 8.0f;
 
+inline constexpr SDL_FRect HAND_IDLE_FRAME = { 48, 2, 45, 36 };
+inline constexpr float HAND_RENDER_SCALE   = 5.5f;
+
+inline constexpr float HAND_OVERHANG_RIGHT  = 32.5f;
+inline constexpr float HAND_OVERHANG_BOTTOM = 1.0f;
+
+inline constexpr float HAND_ANCHOR_X = DEF_WIN_WIDTH  + HAND_OVERHANG_RIGHT;
+inline constexpr float HAND_ANCHOR_Y = DEF_WIN_HEIGHT + HAND_OVERHANG_BOTTOM;
+
 Player::Player(Vector3 pos, SDL_Renderer* ren)
 {
     m_cam = std::make_unique<Camera>(pos);
@@ -126,19 +135,19 @@ void Player::update(float delta)
 
 void Player::render()
 {
-    currAnim().renderFrame(m_ren, 585, 403);
+    currAnim().renderFrameAnchored(m_ren, HAND_ANCHOR_X, HAND_ANCHOR_Y);
 }
 
 void Player::initAnims()
 {
     handIdle.setImage("assets/hands/weaponspell1.png", m_ren);
-    handIdle.setRenderScale(5.5);
+    handIdle.setRenderScale(HAND_RENDER_SCALE);
     handIdle.setFrameTime(1.7);
     handIdle.setLooping(true);
-    handIdle.addFrame({ 48, 2, 45, 36 });
+    handIdle.addFrame(HAND_IDLE_FRAME);
 
     spellBasic.setImage("assets/hands/weaponspell1.png", m_ren);
-    spellBasic.setRenderScale(5.5);
+    spellBasic.setRenderScale(HAND_RENDER_SCALE);
     spellBasic.setFrameTime(0.1f);
     spellBasic.setLooping(false);
     spellBasic.addFrame({ 48, 2, 45, 36 });

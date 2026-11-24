@@ -59,6 +59,16 @@ struct Animation
         m_sprite.render(SDLRen);
     }
 
+    void renderFrameAnchored(SDL_Renderer* SDLRen, float anchorX, float anchorY)
+    {
+        if (m_frames.empty()) return;
+        m_sprite.src = getCurrentFrame();
+        float w = m_sprite.src.w * m_spriteScale;
+        float h = m_sprite.src.h * m_spriteScale;
+        m_sprite.dst = {anchorX - w, anchorY - h, w, h};
+        m_sprite.render(SDLRen);
+    }
+
     SDL_FRect getCurrentFrame() 
     {
         if (m_frames.empty()) return {0, 0, 0, 0};

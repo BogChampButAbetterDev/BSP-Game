@@ -1,6 +1,8 @@
 #include "platform.hpp"
 #include <iostream>
 
+#include "globals/globals.hpp"
+
 namespace Platform
 {
     bool init()
@@ -32,6 +34,8 @@ namespace Platform
         {
             std::cerr << "Renderer creation failed: " << SDL_GetError() << '\n';
         }
+
+        SDL_SetRenderLogicalPresentation(renderer, DEF_WIN_WIDTH, DEF_WIN_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
         return renderer;
     }
