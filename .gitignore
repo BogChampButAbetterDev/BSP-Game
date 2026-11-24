@@ -32,6 +32,8 @@ Weekend_Plans.md
 assets/Textures/
 assets/skies/
 
+profile.json.gz
+
 # OS junk
 .DS_Store
 Thumbs.db

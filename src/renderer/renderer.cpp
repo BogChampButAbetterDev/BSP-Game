@@ -1,55 +1,111 @@
 #include "renderer.hpp"
 
-bool Renderer::loadPNG(const std::string& path, Texture& out)
-{
-    SDL_Surface* loaded = SDL_LoadPNG(path.c_str());
-    if (!loaded)
-    {
-        std::cerr << "Texture loading failure: " << SDL_GetError() << " " << path << "\n";
-        return false;
-    }
-    SDL_Surface* conv = SDL_ConvertSurface(loaded, SDL_PIXELFORMAT_ABGR8888);
-    SDL_DestroySurface(loaded);
-    if (!conv) return false;
-
-    out.width = conv->w;
-    out.height = conv->h;
-    out.pixels.resize(out.width * out.height);
-    for (int y = 0; y < out.height; y++)
-    {
-        const uint8_t* src = (const uint8_t*)conv->pixels + y * conv->pitch;
-        std::memcpy(&out.pixels[y * out.width], src, out.width * sizeof(uint32_t));
-    }
-    SDL_DestroySurface(conv);
-    return true;
-}
-
 void Renderer::loadTextures(const std::vector<std::string>& paths)
 {
-    for (Texture* t : {&m_defaultTex, &m_defaultFloor, &m_defaultCeil})
+    for (Texture *t : {&m_defaultTex, &m_defaultFloor, &m_defaultCeil})
     {
-        t->width = 64; t->height = 64;
+        t->width = 64;
+        t->height = 64;
         t->pixels.resize(64 * 64);
         t->genChecker();
     }
+
     for (const std::string& p : paths)
     {
+        SDL_Surface* loaded = SDL_LoadPNG(p.c_str());
+        if (!loaded) 
+        { 
+            std::cerr << "Texture loading failure: " << SDL_GetError() << " " << p << "\n"; 
+            m_textures.push_back(m_defaultTex);
+            continue;
+        }
+
+        SDL_Surface* converted = SDL_ConvertSurface(loaded, SDL_PIXELFORMAT_ABGR8888);
+        SDL_DestroySurface(loaded);
         Texture tex;
-        m_textures.push_back(loadPNG(p, tex) ? tex : m_defaultTex);
+        tex.width = converted->w;
+        tex.height = converted->h;
+        tex.pixels.resize(tex.width * tex.height);
+        for (int y = 0; y < tex.height; y++)
+        {
+            const uint8_t* src = (const uint8_t*)converted->pixels + y * converted->pitch;
+            std::memcpy(&tex.pixels[y * tex.width], src, tex.width * sizeof(uint32_t));
+        }
+        m_textures.push_back(tex);
+        SDL_DestroySurface(converted);
     }
 }
 
-void Renderer::loadSkyFaces(const std::vector<std::string>& paths)
+void Renderer::loadSkyTexture(const std::string &p)
 {
-    m_sky.valid = false;
-    if (paths.size() != NUM_FACES)
+    m_defaultSky.width = 64;
+    m_defaultSky.height = 64;
+    m_defaultSky.pixels.resize(m_defaultSky.width * m_defaultSky.height);
+    m_defaultSky.genChecker();
+
+    SDL_Surface *loaded = SDL_LoadPNG(p.c_str());
+    if (!loaded)
     {
-        std::cerr << "Sky needs " << NUM_FACES << " faces, got " << paths.size() << "\n";
+        std::cerr << "Texture loading failure: " << SDL_GetError() << " " << p << "\n";
+        m_textures.push_back(m_defaultTex);
         return;
     }
-    for (int i = 0; i < NUM_FACES; i++)
-        if (!loadPNG(paths[i], m_sky.faces[i])) return;   // stay on the gradient fallback
+
+    SDL_Surface *converted = SDL_ConvertSurface(loaded, SDL_PIXELFORMAT_ABGR8888);
+    SDL_DestroySurface(loaded);
+    Texture tex;
+    tex.width = converted->w;
+    tex.height = converted->h;
+    tex.pixels.resize(tex.width * tex.height);
+    for (int y = 0; y < tex.height; y++)
+    {
+        const uint8_t *src = (const uint8_t *)converted->pixels + y * converted->pitch;
+        std::memcpy(&tex.pixels[y * tex.width], src, tex.width * sizeof(uint32_t));
+    }   
+    m_skyTex = tex;
+    SDL_DestroySurface(converted);
+}
+
+void Renderer::loadSkyFaces(const std::vector<std::string> &paths)
+{
+    if (paths.size() != NUM_SKY_FACES) return;
+
+    m_defaultSky.width = 64;
+    m_defaultSky.height = 64;
+    m_defaultSky.pixels.resize(m_defaultSky.width * m_defaultSky.height);
+    m_defaultSky.genChecker();
+
+    for (const std::string &p : paths)
+    {
+        for (int i = 0; i < NUM_SKY_FACES; i++)
+        {
+            SDL_Surface *loaded = SDL_LoadPNG(p.c_str());
+            if (!loaded)
+            {
+                std::cerr << "Texture loading failure: " << SDL_GetError() << " " << p << "\n";
+                m_sky.faces[i] = m_defaultSky;
+                return;
+            }
+
+            SDL_Surface *converted = SDL_ConvertSurface(loaded, SDL_PIXELFORMAT_ABGR8888);
+            SDL_DestroySurface(loaded);
+            Texture tex;
+            tex.width = converted->w;
+            tex.height = converted->h;
+            tex.pixels.resize(tex.width * tex.height);
+            for (int y = 0; y < tex.height; y++)
+            {
+                const uint8_t *src = (const uint8_t *)converted->pixels + y * converted->pitch;
+                std::memcpy(&tex.pixels[y * tex.width], src, tex.width * sizeof(uint32_t));
+            }
+
+            m_sky.faces[i] = tex;
+            SDL_DestroySurface(converted);
+        }
+    }
+
     m_sky.valid = true;
+    std::cout << m_sky.valid << "\n";
 }
 
 void Renderer::beginRender()
@@ -143,21 +199,6 @@ void Renderer::renderMap(const Map& map)
     }
 
     m_buf.drawSector = -1;
-
-    // if (m_sectorDBG)
-    // {
-    //     for (int i = 0; i < DEF_WIN_WIDTH * DEF_WIN_HEIGHT; i++)
-    //     {
-    //         if (m_buf.covered[i]) continue;
-    //         int sec = m_buf.sectorAt[i];
-    //         if (sec < 0) { m_buf.pixels[i] = rgb(40, 40, 40); continue; }
-    //         m_buf.pixels[i] = rgb((uint8_t)(60 + (sec * 50) % 195),
-    //                             100,
-    //                             (uint8_t)(200 - (sec * 40) % 150));
-    //     }
-    //     return;
-    // }
-
     drawFlats(map, camSector);
 }
 
@@ -233,25 +274,33 @@ void Renderer::drawFlats(const Map& map, int camSector)
             float xn = (x + 0.5f - HALF_WID) / f;
             Vector3 dir = fwd + right * xn + up * yn;
 
-            auto hit = [&](float h0, Vector2 g, Vector2 o) -> float
+            auto hit = [&](float h0, Vector2 g, Vector2 o, float& denom) -> float
             {
-                float denom = dir.y - g.x * dir.x - g.y * dir.z;
+                denom = dir.y - g.x * dir.x - g.y * dir.z;
                 if (std::abs(denom) < 1e-6f)
                     return -1.0f;
                 float num = h0 + g.x * (pos.x - o.x) + g.y * (pos.z - o.y) - pos.y;
                 return num / denom;
             };
 
-            float tf = hit(S.floorHt, S.floorGrad, S.floorOrigin);
-            float tc = hit(S.ceilingHt, S.ceilGrad, S.ceilOrigin);
+            float dF, dC;
+            float tf = hit(S.floorHt, S.floorGrad, S.floorOrigin, dF);
+            float tc = hit(S.ceilingHt, S.ceilGrad, S.ceilOrigin, dC);
+
+            bool floorOK = tf > 0 && dF < 0;
+            bool ceilOK = tc > 0 && dC > 0;
 
             bool useCeil;
-            if (tf > 0 && (tc <= 0 || tf < tc))
+            if (floorOK && (!ceilOK || tf < tc))
                 useCeil = false;
-            else if (tc > 0)
+            else if (ceilOK)
                 useCeil = true;
             else
+            {
+                if (S.sky)
+                    m_buf.pixels[i] = m_sky.sample(dir);
                 continue;
+            }
             float t = useCeil ? tc : tf;
 
             if (useCeil && S.sky)
@@ -261,8 +310,7 @@ void Renderer::drawFlats(const Map& map, int camSector)
             }
 
             float wx = pos.x + dir.x * t, wz = pos.z + dir.z * t;
-            const Texture &tex = useCeil ? pick(S.ceilingTexId, m_defaultCeil)
-                                         : pick(S.floorTexId, m_defaultFloor);
+            const Texture &tex = useCeil ? pick(S.ceilingTexId, m_defaultCeil) : pick(S.floorTexId, m_defaultFloor);
             m_buf.pixels[i] = scaleColor(tex.sample(wx / TEX_WORLD_H, wz / TEX_WORLD_H), S.light);
         }
     }

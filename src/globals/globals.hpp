@@ -9,3 +9,5 @@
 #define TEX_WORLD_W 4.0f
 
 #define MOUSE_SENSITIVITY 0.2f
+
+const int NUM_SKY_FACES = 6;

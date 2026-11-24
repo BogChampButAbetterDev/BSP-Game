@@ -4,12 +4,11 @@
 
 #include "engine/texture.hpp"
 #include "engine/math/vectors.hpp"
-
-const int NUM_FACES = 6;
+#include "globals/globals.hpp"
 
 struct SkyBox
 {
-    Texture faces[NUM_FACES];
+    Texture faces[NUM_SKY_FACES];
     Texture pano;
     bool usePano = false;
     bool valid = false;

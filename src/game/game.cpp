@@ -26,9 +26,10 @@ bool Game::init()
 
 void Game::run()
 {
-    m_ml = MapLoader("maps/Slopes.lvl");
+    m_ml = MapLoader("maps/Highlands.lvl");
     m_map = m_ml.read();
     m_ren.loadTextures(m_map.texturePaths);
+    m_ren.loadSkyFaces(m_map.skyPaths);
     m_map.tree = buildBSP(m_map.walls);
 
     m_play = Player({0, 0, 0}, m_sdlren);
