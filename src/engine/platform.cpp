@@ -32,6 +32,7 @@ namespace Platform
         {
             std::cerr << "Renderer creation failed: " << SDL_GetError() << '\n';
         }
+
         return renderer;
     }
 

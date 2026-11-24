@@ -215,6 +215,8 @@ inline void fillTexturedPolygon(Framebuffer* buf, std::span<const ScreenVertex> 
     int yEnd   = std::min(DEF_WIN_HEIGHT - 1, (int)std::ceil(maxYf));
     int n = (int)verts.size();
 
+    uint32_t shade256 = shadeToFixed(shade);
+
     for (int y = yStart; y <= yEnd; y++)
     {
         float yf = y + 0.5f;
@@ -255,7 +257,7 @@ inline void fillTexturedPolygon(Framebuffer* buf, std::span<const ScreenVertex> 
             float u = p.uOverZ / p.invZ;
             float v = p.vOverZ / p.invZ;
 
-            buf->plotFree(x, y, scaleColor(tex.sample(u, v), shade));
+            buf->plotFree(x, y, scaleColorFixed(tex.sample(u, v), shade256));
         }
     }
 }

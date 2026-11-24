@@ -1,4 +1,4 @@
-CXX = g++
+CXX = clang++
 CXXFLAGS = -Wall -g -O2 -std=c++20 -MMD -MP -I./src -I/ucrt64/include/SDL3
 
 PROFILE_CXX = clang++
@@ -30,7 +30,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	mkdir -p bin
-	$(CXX) $(CXXFLAGS) -static-libasan $(OBJ) -o $(TARGET) $(LIBS) -mconsole
+	$(CXX) $(CXXFLAGS) $(OBJ) -o $(TARGET) $(LIBS) -mconsole
 
 obj/%.o: src/%.cpp
 	mkdir -p $(dir $@)

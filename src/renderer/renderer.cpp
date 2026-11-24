@@ -252,6 +252,10 @@ void Renderer::drawFlats(const Map& map, int camSector)
     Vector3 up    = cam->camToWorldDir({0, 1, 0});
     float f = (float)HALF_WID;
 
+    std::vector<uint32_t> light256(map.sectors.size());
+    for (size_t k = 0; k < map.sectors.size(); k++)
+        light256[k] = shadeToFixed(map.sectors[k].light);
+
     auto pick = [&](int id, const Texture& fb) -> const Texture&
     { return (id >= 0 && id < (int)m_textures.size()) ? m_textures[id] : fb; };
 
@@ -311,7 +315,7 @@ void Renderer::drawFlats(const Map& map, int camSector)
 
             float wx = pos.x + dir.x * t, wz = pos.z + dir.z * t;
             const Texture &tex = useCeil ? pick(S.ceilingTexId, m_defaultCeil) : pick(S.floorTexId, m_defaultFloor);
-            m_buf.pixels[i] = scaleColor(tex.sample(wx / TEX_WORLD_H, wz / TEX_WORLD_H), S.light);
+            m_buf.pixels[i] = scaleColorFixed(tex.sample(wx / TEX_WORLD_H, wz / TEX_WORLD_H), light256[sec]);
         }
     }
 }

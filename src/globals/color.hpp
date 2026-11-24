@@ -18,9 +18,9 @@ constexpr uint32_t rgb(uint8_t r, uint8_t g, uint8_t b)
 constexpr Color unpackRGB(uint32_t color)
 {
     Color out;
-    out.r = (uint8_t)(color & 0x000000FF);
-    out.g = (uint8_t)((color >> 8) & 0xFF);
-    out.b = (uint8_t)((color >> 16) & 0xFF);
+    out.r = (uint8_t)(color & 0x000000FFu);
+    out.g = (uint8_t)((color >> 8) & 0xFFu);
+    out.b = (uint8_t)((color >> 16) & 0xFFu);
     return out;
 }
 
@@ -29,6 +29,7 @@ inline uint32_t debugColor(int i)
     return rgb(60 + (i * 37) % 195, 60 + (i * 71) % 195, 60 + (i * 113) % 195);
 }
 
+// slow
 inline uint32_t scaleColor(uint32_t color, float s)
 {
     Color c = unpackRGB(color);
@@ -38,4 +39,16 @@ inline uint32_t scaleColor(uint32_t color, float s)
     uint8_t b = (uint8_t)std::clamp(c.b * s, 0.0f, 255.0f);
 
     return rgb(r, g, b);
+}
+
+inline uint32_t shadeToFixed(float s)
+{
+    return (uint32_t)(std::clamp(s, 0.0f, 1.0f) * 256.0f + 0.5f);
+}
+
+inline uint32_t scaleColorFixed(uint32_t c, uint32_t shade256)
+{
+    uint32_t rb = (((c & 0x00FF00FFu) * shade256) >> 8) & 0x00FF00FFu;
+    uint32_t g = (((c & 0x0000FF00u) * shade256) >> 8) & 0x0000FF00u;
+    return (c & 0xFF000000) | rb | g;
 }

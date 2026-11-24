@@ -1,6 +1,7 @@
 # Build folders
 bin/
 obj/
+obj_profile/
 build/
 
 # Object files
@@ -33,6 +34,7 @@ assets/Textures/
 assets/skies/
 
 profile.json.gz
+imgui.ini
 
 # OS junk
 .DS_Store
