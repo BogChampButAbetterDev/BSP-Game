@@ -50,4 +50,5 @@ private:
 
     Animation handIdle;
     Animation spellBasic;
+    Animation crosshair;
 };

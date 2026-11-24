@@ -17,7 +17,7 @@ namespace Platform
 
     SDL_Window *create_window(int width, int height)
     {
-        SDL_Window *window = SDL_CreateWindow("BSP Renderer", width, height, 0);
+        SDL_Window *window = SDL_CreateWindow("BSP Renderer", width, height, SDL_WINDOW_FULLSCREEN);
         if (!window)
         {
             std::cerr << "Window creation failed: " << SDL_GetError() << '\n';

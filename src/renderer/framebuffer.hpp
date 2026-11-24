@@ -36,6 +36,7 @@ struct Framebuffer
     void create(SDL_Renderer* ren)
     {
         tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, DEF_WIN_WIDTH, DEF_WIN_HEIGHT);
+        SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
         pixels.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
         covered.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
         sectorAt.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);

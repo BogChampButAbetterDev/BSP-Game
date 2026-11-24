@@ -56,7 +56,7 @@ public:
     float m_pitch = 0.0f;
     float m_yaw = 0.0f;
 
-    int m_speed = 10;
+    int m_speed = 15;
     float m_rotSpeed = 100.0f;
 
 private:

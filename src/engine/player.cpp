@@ -5,13 +5,19 @@ static constexpr float STEP_UP_SPEED = 15.0f;
 static constexpr float JUMP_STRENGTH = 8.0f;
 
 inline constexpr SDL_FRect HAND_IDLE_FRAME = { 48, 2, 45, 36 };
-inline constexpr float HAND_RENDER_SCALE   = 5.5f;
+inline constexpr SDL_FRect CROSSHAIR_FRAME = { 0, 0, 32, 32 };
+
+inline constexpr float HAND_RENDER_SCALE        = 5.5f;
+inline constexpr float CROSSHAIR_RENDER_SCALE   = 1.0f;
 
 inline constexpr float HAND_OVERHANG_RIGHT  = 32.5f;
 inline constexpr float HAND_OVERHANG_BOTTOM = 1.0f;
 
 inline constexpr float HAND_ANCHOR_X = DEF_WIN_WIDTH  + HAND_OVERHANG_RIGHT;
 inline constexpr float HAND_ANCHOR_Y = DEF_WIN_HEIGHT + HAND_OVERHANG_BOTTOM;
+
+inline constexpr float CROSSHAIR_ANCHOR_X = HALF_WID - ((CROSSHAIR_FRAME.w * CROSSHAIR_RENDER_SCALE) * 0.5);
+inline constexpr float CROSSHAIR_ANCHOR_Y = HALF_HT  - ((CROSSHAIR_FRAME.h * CROSSHAIR_RENDER_SCALE) * 0.5);
 
 Player::Player(Vector3 pos, SDL_Renderer* ren)
 {
@@ -136,6 +142,7 @@ void Player::update(float delta)
 void Player::render()
 {
     currAnim().renderFrameAnchored(m_ren, HAND_ANCHOR_X, HAND_ANCHOR_Y);
+    crosshair.renderFrame(m_ren, CROSSHAIR_ANCHOR_X, CROSSHAIR_ANCHOR_Y);
 }
 
 void Player::initAnims()
@@ -154,4 +161,8 @@ void Player::initAnims()
     spellBasic.addFrame({ 10, 45, 47, 41 });
     spellBasic.addFrame({ 10, 45, 47, 41 });
     spellBasic.addFrame({ 96, 41, 49, 44 });
+
+    crosshair.setImage("assets/crosshair/1.png", m_ren);
+    crosshair.setRenderScale(CROSSHAIR_RENDER_SCALE);
+    crosshair.addFrame(CROSSHAIR_FRAME);
 }
