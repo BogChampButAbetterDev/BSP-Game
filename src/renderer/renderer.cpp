@@ -202,45 +202,31 @@ void Renderer::renderMap(const Map& map)
     drawFlats(map, camSector);
 }
 
-static int castSector(const Map& map, Vector2 p, Vector2 d)
+int Renderer::findCameraSector(const Map& map, Vector2 p)
 {
-    float best = 1e30f; int sec = -1;
-    auto cross = [](float ax, float ay, float bx, float by) { return ax * by - ay * bx; };
+    std::vector<uint8_t> parity(map.sectors.size(), 0);
 
     for (const Wall& w : map.walls)
     {
-        float rx = w.line.end.x - w.line.start.x, ry = w.line.end.y - w.line.start.y;
-        float qx = w.line.start.x - p.x,          qy = w.line.start.y - p.y;
-        float denom = cross(d.x, d.y, rx, ry);
-        if (std::abs(denom) < 1e-8f) continue;
-        float t = cross(qx, qy, rx, ry) / denom;
-        float u = cross(qx, qy, d.x, d.y) / denom;
-        if (t > 0 && u >= 0 && u <= 1 && t < best)
-        {
-            best = t;
-            sec = (w.line.sideOf(p) > 0) ? w.frontSect : w.backSect;
-            if (sec < 0 && w.doubleSided) sec = w.frontSect;
-        }
-    }
-    return sec;
-}
+        if (w.backSect < 0 && w.doubleSided) continue;
 
-int Renderer::findCameraSector(const Map& map, Vector2 p) const
-{
-    constexpr int RAYS = 8;
-    std::vector<int> votes(map.sectors.size(), 0);
+        Vector2 a = w.line.start, b = w.line.end;
+        if ((a.y > p.y) == (b.y > p.y)) continue;
 
-    for (int k = 0; k < RAYS; k++)
-    {
-        float a = (k + 0.37f) * (6.2831853f / RAYS);
-        int s = castSector(map, p, { std::cos(a), std::sin(a) });
-        if (s >= 0) votes[s]++;
+        float x = a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x);
+        if (x <= p.x) continue;
+
+        if (w.frontSect >= 0) parity[w.frontSect] ^= 1;
+        if (w.backSect  >= 0) parity[w.backSect]  ^= 1;
     }
 
-    int best = -1, bestVotes = 0;
-    for (size_t i = 0; i < votes.size(); i++)
-        if (votes[i] > bestVotes) { bestVotes = votes[i]; best = (int)i; }
-    return best;
+    if (m_lastCamSector >= 0 && m_lastCamSector < (int)parity.size() && parity[m_lastCamSector])
+        return m_lastCamSector;
+
+    for (size_t i = 0; i < parity.size(); i++)
+        if (parity[i]) { m_lastCamSector = (int)i; return m_lastCamSector; }
+
+    return m_lastCamSector;
 }
 
 void Renderer::drawFlats(const Map& map, int camSector)

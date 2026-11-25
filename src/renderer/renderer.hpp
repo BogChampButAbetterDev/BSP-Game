@@ -57,6 +57,8 @@ private:
     
     DirectionalLight m_light;
 
+    int m_lastCamSector = -1;
+
     bool m_sectorDBG = true;
 
     bool loadPNG(const std::string& path, Texture& out);
@@ -65,6 +67,6 @@ private:
 
     void drawPlaneClaim(Line line, float height, bool isCeiling, DirectionalLight light, uint32_t color);
 
-    int  findCameraSector(const Map& map, Vector2 p) const;
+    int  findCameraSector(const Map& map, Vector2 p);
     void drawFlats(const Map& map, int camSector);
 };
