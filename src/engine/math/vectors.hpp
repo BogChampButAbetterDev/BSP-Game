@@ -142,3 +142,11 @@ struct Vector3
         };
     }
 };
+
+inline Vector2 approach(Vector2 current, Vector2 target, float maxDelta)
+{
+    Vector2 diff = target - current;
+    float len = diff.length();
+    if (len <= maxDelta || len < 1e-6f) return target;
+    return current + diff * (maxDelta / len);
+}

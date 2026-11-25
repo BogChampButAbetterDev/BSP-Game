@@ -39,6 +39,7 @@ private:
     void updateVertical(float delta);
 
     float m_feetY = 0.0f;
+    Vector2 m_vel = { 0.0f, 0.0f };
     float m_velY = 0.0f;
     bool  m_grounded = false;
     bool m_prevJump = false;

@@ -1,8 +1,12 @@
 #include "player.hpp"
 
-static constexpr float GRAVITY       = 25.0f;
-static constexpr float STEP_UP_SPEED = 15.0f;
-static constexpr float JUMP_STRENGTH = 8.0f;
+static constexpr float GRAVITY              = 25.0f;
+static constexpr float STEP_UP_SPEED        = 15.0f;
+static constexpr float JUMP_STRENGTH        = 8.0f;
+static constexpr float GROUND_ACCEL_RATE    = 60.0f;
+static constexpr float GROUND_DECEL_RATE    = 90.0f;
+static constexpr float AIR_ACCEL_RATE       = 8.0f;
+static constexpr float AIR_DECEL_RATE       = 1.0f;
 
 inline constexpr SDL_FRect HAND_IDLE_FRAME = { 48, 2, 45, 36 };
 inline constexpr SDL_FRect CROSSHAIR_FRAME = { 0, 0, 32, 32 };
@@ -100,12 +104,22 @@ void Player::update(float delta)
 
     camPtr->m_direction = camPtr->m_direction.normalized();
 
-    Vector3 d = m_cam->computeMove(delta);
+    Vector3 desired = m_cam->computeMove(1.0f);
+    Vector2 target = { desired.x, desired.z };
+
+    bool hasInput = target.len_squared() > 1e-6f;
+    float rate = m_grounded ? (hasInput ? GROUND_ACCEL_RATE : GROUND_DECEL_RATE) : (hasInput ? AIR_ACCEL_RATE : AIR_DECEL_RATE);
+
+    m_vel = approach(m_vel, target, rate * delta);
+
     if (m_world)
     {
-        Vector2 p = m_world->move({m_cam->m_pos.x, m_cam->m_pos.z}, {d.x, d.z}, m_feetY, m_col);
+        Vector2 prev{ camPtr->m_pos.x, camPtr->m_pos.z };
+        Vector2 p = m_world->move(prev, m_vel * delta, m_feetY, m_col);
         m_cam->m_pos.x = p.x;
         m_cam->m_pos.z = p.y;
+        if (delta > 0.0f)
+            m_vel = (p - prev) / delta;
 
         bool jumpPressed = camPtr->in.space && !m_prevJump;
         m_prevJump = camPtr->in.space;
@@ -118,7 +132,8 @@ void Player::update(float delta)
     }
     else
     {
-        m_cam->m_pos += d;
+        m_cam->m_pos.x += m_vel.x * delta;
+        m_cam->m_pos.z += m_vel.y * delta;
     }
 
     if (camPtr->in.lmb)
