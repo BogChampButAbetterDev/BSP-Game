@@ -13,6 +13,31 @@
 constexpr float CLIP_NEAR = 1e-5f;
 constexpr int MAX_CLIP_VERTS = 8;
 
+static inline bool clipLineToScreen(Vector2& a, Vector2& b)
+{
+    if (!std::isfinite(a.x) || !std::isfinite(a.y) || !std::isfinite(b.x) || !std::isfinite(b.y)) return false;
+
+    const float xmin = 0.0f, ymin = 0.0f;
+    const float xmax = (float)(DEF_WIN_WIDTH - 1), ymax = (float)(DEF_WIN_HEIGHT - 1);
+    float dx = b.x - a.x, dy = b.y - a.y;
+    float p[4] = { -dx, dx, -dy, dy };
+    float q[4] = { a.x - xmin, xmax - a.x, a.y - ymin, ymax - a.y };
+    float t0 = 0.0f, t1 = 1.0f;
+
+    for (int i = 0; i < 4; i++)
+    {
+        if (p[i] == 0.0f) { if (q[i] < 0.0f) return false; continue; }
+        float r = q[i] / p[i];
+        if (p[i] < 0.0f) { if (r > t1) return false; t0 = std::max(t0, r); }
+        else             { if (r < t0) return false; t1 = std::min(t1, r); }
+    }
+    Vector2 na{ a.x + t0 * dx, a.y + t0 * dy };
+    Vector2 nb{ a.x + t1 * dx, a.y + t1 * dy };
+    a = na;
+    b = nb;
+    return true;
+}
+
 inline void drawLine(Framebuffer* buf, Vector2 a, Vector2 b)
 {
     float dx = b.x - a.x;
@@ -49,6 +74,18 @@ inline void drawLine(Framebuffer* buf, Vector2 a, Vector2 b)
         }
         decision += 2 * std::abs(dy);
     }
+}
+
+static void drawWorldMarker(Framebuffer* buf, Vector3 p, uint32_t color, int radius)
+{
+    Camera* cam = buf->activeCamera;
+    Vector3 cs = cam->toCamSpace(p);
+    if (cs.z < cam->getNear()) return;
+
+    Vector2 s = cam->projectCamSpace(cs);
+    for (int dy = -radius; dy <= radius; dy++)
+        for (int dx = -radius; dx <= radius; dx++)
+            buf->setPixelColor((int)s.x + dx, (int)s.y + dy, color);
 }
 
 inline int clipNear(const Vector3* in, size_t n, float nearZ, Vector3* out)

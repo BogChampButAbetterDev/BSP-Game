@@ -23,6 +23,8 @@ inline constexpr float HAND_ANCHOR_Y = DEF_WIN_HEIGHT + HAND_OVERHANG_BOTTOM;
 inline constexpr float CROSSHAIR_ANCHOR_X = HALF_WID - ((CROSSHAIR_FRAME.w * CROSSHAIR_RENDER_SCALE) * 0.5);
 inline constexpr float CROSSHAIR_ANCHOR_Y = HALF_HT  - ((CROSSHAIR_FRAME.h * CROSSHAIR_RENDER_SCALE) * 0.5);
 
+static constexpr float TRACE_MAX_DIST = 100.0f;
+
 Player::Player(Vector3 pos, SDL_Renderer* ren)
 {
     m_cam = std::make_unique<Camera>(pos);
@@ -43,14 +45,22 @@ void Player::snapToFloor()
     }
 }
 
+void Player::fireTrace()
+{
+    if (!m_rayWorld) return;
+    Ray ray{ TRACE_MAX_DIST, m_cam->getForward(), m_cam->getPos() };
+    RayHit h = m_rayWorld->castRay(ray);
+    m_traces.push_back(makeTrace(ray, h));
+}
+
 void Player::updateVertical(float delta)
 {
     if (!m_world) return;
-    Vector2 pp{m_cam->m_pos.x, m_cam->m_pos.z};
-    const Sector* s = m_world->sectorAt(pp);
+    Vector2 posXZ{m_cam->m_pos.x, m_cam->m_pos.z};
+    const Sector* s = m_world->sectorAt(posXZ);
     if (!s) return;
 
-    float fl = s->floorAt(pp), cl = s->ceilAt(pp);
+    float fl = s->floorAt(posXZ), cl = s->ceilAt(posXZ);
     float prev = m_feetY;
     bool wasGrounded = m_grounded;
 
@@ -125,7 +135,8 @@ void Player::update(float delta)
         m_prevJump = camPtr->in.space;
         if (jumpPressed && m_grounded) 
         {
-            m_velY = JUMP_STRENGTH; m_grounded = false;
+            m_velY = JUMP_STRENGTH; 
+            m_grounded = false;
         }
 
         updateVertical(delta);
@@ -142,6 +153,7 @@ void Player::update(float delta)
         {
             m_stat = AnimState::SPELL_BASIC;
             spellBasic.reset();
+            fireTrace();
         }
     }
 
@@ -152,6 +164,9 @@ void Player::update(float delta)
     }
 
     currAnim().update(delta);
+
+    for (DebugTrace& t : m_traces) t.life -= delta;
+    m_traces.erase(std::remove_if(m_traces.begin(), m_traces.end(), [](const DebugTrace& t) { return t.life <= 0.0f; }), m_traces.end());
 }
 
 void Player::render()

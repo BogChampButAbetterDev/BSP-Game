@@ -7,6 +7,7 @@
 #include "engine/input.hpp"
 #include "engine/mapLoader.hpp"
 #include "engine/collision.hpp"
+#include "engine/raycast.hpp"
 
 #include "engine/bsp/bsp_build.hpp"
 
@@ -47,6 +48,7 @@ private:
     Map m_map;
 
     CollisionWorld m_world;
+    RayWorld m_rayWorld;
 
     GAME_STATE m_state = GAME_STATE::NONE;
 

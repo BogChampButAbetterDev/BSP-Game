@@ -36,6 +36,9 @@ void Game::run()
 
     m_world = CollisionWorld(&m_map.tree, &m_map.sectors);
     m_play.setWorld(&m_world);
+    m_rayWorld.init(&m_map.walls, &m_map.sectors, &m_world);
+    m_play.setRayWorld(&m_rayWorld);
+
     m_map.onLoad(m_play.getCam());
     m_play.snapToFloor();
 
@@ -55,7 +58,7 @@ void Game::run()
 
     if constexpr (IS_DEMO)
         SDL_SetWindowTitle(m_win, "Wizard Detective - DEMO");
-    else 
+    else if constexpr (IS_RELEASE)
         SDL_SetWindowTitle(m_win, "Wizard Detective");
 
     while (m_running)
@@ -94,6 +97,7 @@ void Game::run()
                 m_ren.render2DView(m_map);
             else
                 m_ren.renderMap(m_map);
+                m_ren.renderDebugTraces(m_play.getTraces());
         }
         else m_ren.renderMap(m_map);
 

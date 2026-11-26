@@ -1,7 +1,8 @@
 #pragma once
 #include "vectors.hpp"
 
-const float eps = 0.001;
+constexpr float eps = 0.001;
+constexpr float PARALLEL_EPS = 1e-8f;
 
 struct Line
 {
@@ -14,6 +15,19 @@ struct Line
     float signedDistance(Vector2 p) const 
     {
         return sideOf(p) / length();
+    }
+
+    bool intersect(const Line& other, float& fracOnThis, float& fracOnOther)
+    {
+        Vector2 r = end - start;
+        Vector2 s = other.end - other.start;
+        float denom = r.cross(s);
+        if (std::abs(denom) < PARALLEL_EPS) return false;
+
+        Vector2 q = other.start - start;
+        fracOnThis = q.cross(s) / denom;
+        fracOnOther = q.cross(r) / denom;
+        return fracOnThis >= 0.0f && fracOnThis <= 1.0f && fracOnOther >= 0.0f && fracOnOther <= 1.0f;
     }
 };
 

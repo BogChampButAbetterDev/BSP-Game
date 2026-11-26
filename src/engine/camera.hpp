@@ -42,6 +42,7 @@ public:
     float getEyeHeight() const { return m_eyeHeight; }
 
     float getFocal() const { return (float)m_focalLen; }
+    Vector3 getForward() const { return m_forward; }
     //float getHorizon() const { return HALF_HT - tanf(deg2rad(m_pitch)) * m_focalLen; }
 
     Input in;

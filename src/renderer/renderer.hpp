@@ -14,6 +14,7 @@
 #include "engine/lighting.hpp"
 #include "engine/texture.hpp"
 #include "engine/sky.hpp"
+#include "engine/raycast.hpp"
 
 class Renderer
 {
@@ -34,6 +35,8 @@ public:
     void renderMapDBGCLR(const Map& map);
     void render2DView(const Map& map);
     void endRender();
+
+    void renderDebugTraces(const std::vector<DebugTrace>& traces);
 
     Framebuffer* getBuf() { return &m_buf; }
 
@@ -69,4 +72,16 @@ private:
 
     int  findCameraSector(const Map& map, Vector2 p);
     void drawFlats(const Map& map, int camSector);
+
+    static uint32_t hitColor(HitType t)
+    {
+        switch (t)
+        {
+            case HitType::WALL:    return rgb(255, 80, 80);
+            case HitType::FLOOR:   return rgb(80, 255, 80);
+            case HitType::CEILING: return rgb(80, 160, 255);
+            case HitType::NONE:     return rgb(255, 255, 255);
+            default:               return rgb(160, 160, 160);
+        }
+    }
 };

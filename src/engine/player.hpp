@@ -5,9 +5,8 @@
 
 #include <SDL3/SDL.h>
 
-#include "engine/collision.hpp"
-#include "globals/globals.hpp"
-#include "input.hpp"
+#include "collision.hpp"
+#include "raycast.hpp"
 #include "camera.hpp"
 
 #include "animation.hpp"
@@ -23,6 +22,9 @@ public:
     Camera& getCam() const { return *m_cam; }
 
     void setWorld(const CollisionWorld* w) { m_world = w; }
+    void setRayWorld(const RayWorld* r)    { m_rayWorld = r; }
+
+    const std::vector<DebugTrace>& getTraces() const { return m_traces; }
 
     void update(float delta);
     void render();
@@ -35,6 +37,11 @@ private:
 
     const CollisionWorld* m_world = nullptr;
     CollisionParams m_col;
+
+    const RayWorld* m_rayWorld = nullptr;
+    std::vector<DebugTrace> m_traces;
+
+    void fireTrace();
 
     void updateVertical(float delta);
 

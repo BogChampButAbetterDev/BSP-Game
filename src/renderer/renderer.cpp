@@ -306,6 +306,47 @@ void Renderer::drawFlats(const Map& map, int camSector)
     }
 }
 
+static void drawWorldLine(Framebuffer* buf, Vector3 from, Vector3 to, uint32_t color)
+{
+    Camera* cam = buf->activeCamera;
+    const float nearZ = cam->getNear();
+
+    Vector3 a = cam->toCamSpace(from);
+    Vector3 b = cam->toCamSpace(to);
+    if (a.z < nearZ && b.z < nearZ) return;
+    if (a.z < nearZ) a = a + (b - a) * ((nearZ - a.z) / (b.z - a.z));
+    if (b.z < nearZ) b = b + (a - b) * ((nearZ - b.z) / (a.z - b.z));
+
+    Vector2 pa = cam->projectCamSpace(a);
+    Vector2 pb = cam->projectCamSpace(b);
+    if (!clipLineToScreen(pa, pb)) return;
+
+    buf->setDrawColor(color);
+    drawLine(buf, pa, pb);
+}
+
+void Renderer::renderDebugTraces(const std::vector<DebugTrace> &traces)
+{
+    if constexpr (!IS_DEBUG) return;
+
+    const uint32_t TRACE_HIT  = rgb(255, 60, 60);
+    const uint32_t TRACE_MISS = rgb(60, 255, 60);
+
+    for (const DebugTrace& t : traces)
+    {
+        if (t.hit)
+        {
+            drawWorldLine(&m_buf, t.start, t.hitPoint, TRACE_HIT);
+            drawWorldLine(&m_buf, t.hitPoint, t.end, TRACE_MISS);
+            drawWorldMarker(&m_buf, t.hitPoint, hitColor(t.type), 3);
+        }
+        else
+        {
+            drawWorldLine(&m_buf, t.start, t.end, TRACE_MISS);
+        }
+    }
+}
+
 void Renderer::renderMapDBGCLR(const Map& map)
 {
     Vector2 camFloorPos = {m_buf.activeCamera->getPos().x, m_buf.activeCamera->getPos().z};
