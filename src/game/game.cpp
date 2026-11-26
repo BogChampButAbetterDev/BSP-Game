@@ -53,6 +53,11 @@ void Game::run()
 
     m_state = GAME_STATE::PLAY;
 
+    if constexpr (IS_DEMO)
+        SDL_SetWindowTitle(m_win, "Wizard Detective - DEMO");
+    else 
+        SDL_SetWindowTitle(m_win, "Wizard Detective");
+
     while (m_running)
     {
         frameCount++;
@@ -61,15 +66,18 @@ void Game::run()
         delta = (float)(currentTime - lastTime) / 1000.0f;
         lastTime = currentTime;
 
-        if (currentTime - lastFpsUpdateTime >= 1000)
+        if constexpr (IS_DEBUG)
         {
-            snprintf(title_buf, sizeof(title_buf), "BSP Renderer | FPS: %u", frameCount);
-            SDL_SetWindowTitle(m_win, title_buf);
+            if (currentTime - lastFpsUpdateTime >= 1000)
+            {
+                snprintf(title_buf, sizeof(title_buf), "BSP Renderer | FPS: %u", frameCount);
+                SDL_SetWindowTitle(m_win, title_buf);
 
-            frameCount = 0; 
-            lastFpsUpdateTime = currentTime; 
+                frameCount = 0;
+                lastFpsUpdateTime = currentTime;
+            }
         }
-        
+
         pollEvents();
 
         m_play.update(delta);
@@ -78,12 +86,16 @@ void Game::run()
         SDL_RenderClear(m_sdlren);
         m_ren.beginRender();
 
-        if (m_state == GAME_STATE::PLAY_DEBUG)
-            m_ren.renderMapDBGCLR(m_map);
-        else if (m_state == GAME_STATE::DEBUG)
-            m_ren.render2DView(m_map);
-        else
-            m_ren.renderMap(m_map);
+        if constexpr (IS_DEBUG)
+        {
+            if (m_state == GAME_STATE::PLAY_DEBUG)
+                m_ren.renderMapDBGCLR(m_map);
+            else if (m_state == GAME_STATE::DEBUG)
+                m_ren.render2DView(m_map);
+            else
+                m_ren.renderMap(m_map);
+        }
+        else m_ren.renderMap(m_map);
 
         m_ren.endRender();
 

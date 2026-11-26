@@ -10,7 +10,7 @@
 
 #include "engine/bsp/bsp_build.hpp"
 
-#include "globals/globals.hpp"
+#include "globals/build_info.hpp"
 
 enum class GAME_STATE
 {
