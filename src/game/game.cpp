@@ -96,10 +96,13 @@ void Game::run()
             else if (m_state == GAME_STATE::DEBUG)
                 m_ren.render2DView(m_map);
             else
+            {
                 m_ren.renderMap(m_map);
                 m_ren.renderDebugTraces(m_play.getTraces());
+            }
         }
-        else m_ren.renderMap(m_map);
+        else
+            m_ren.renderMap(m_map);
 
         m_ren.endRender();
 

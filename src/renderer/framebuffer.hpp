@@ -15,6 +15,7 @@ struct Framebuffer
     std::vector<uint32_t> pixels;
     std::vector<uint8_t> covered;
     std::vector<int16_t> sectorAt;
+    std::vector<float> depth;
 
     int camSector = -1;
     int drawSector = -1;
@@ -40,6 +41,7 @@ struct Framebuffer
         pixels.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
         covered.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
         sectorAt.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
+        depth.resize(DEF_WIN_WIDTH * DEF_WIN_HEIGHT);
     }
 
     void setActiveCamera(Camera* cam)
@@ -52,6 +54,7 @@ struct Framebuffer
         std::fill(pixels.begin(), pixels.end(), color);
         std::fill(covered.begin(), covered.end(), 0);
         std::fill(sectorAt.begin(), sectorAt.end(), (int16_t)-1);
+        std::fill(depth.begin(), depth.end(), 0.0f);
     }
 
     void setDrawColor(uint32_t color)

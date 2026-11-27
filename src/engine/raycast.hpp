@@ -19,7 +19,8 @@ enum class HitType
     NONE,
     WALL,
     FLOOR,
-    CEILING
+    CEILING,
+    ENTITY
 };
 
 struct Ray

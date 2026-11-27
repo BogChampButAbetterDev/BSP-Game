@@ -105,12 +105,12 @@ void Renderer::loadSkyFaces(const std::vector<std::string> &paths)
     }
 
     m_sky.valid = true;
-    std::cout << m_sky.valid << "\n";
 }
 
 void Renderer::beginRender()
 {
     m_buf.clear(rgb(0x00, 0x00, 0x00));
+    m_buf.setDrawColor(rgb(0xFF, 0x00, 0x00));
 }
 
 void Renderer::renderMap(const Map& map)
@@ -200,6 +200,8 @@ void Renderer::renderMap(const Map& map)
 
     m_buf.drawSector = -1;
     drawFlats(map, camSector);
+
+    renderSprites(m_sprites);
 }
 
 int Renderer::findCameraSector(const Map& map, Vector2 p)
@@ -302,8 +304,18 @@ void Renderer::drawFlats(const Map& map, int camSector)
             float wx = pos.x + dir.x * t, wz = pos.z + dir.z * t;
             const Texture &tex = useCeil ? pick(S.ceilingTexId, m_defaultCeil) : pick(S.floorTexId, m_defaultFloor);
             m_buf.pixels[i] = scaleColorFixed(tex.sample(wx / TEX_WORLD_H, wz / TEX_WORLD_H), light256[sec]);
+            m_buf.depth[i] = 1.0f / t;
         }
     }
+}
+
+void Renderer::drawSprite(const Sprite3D &s, Vector3 c)
+{
+    Camera* cam = m_buf.activeCamera;
+    Vector2 pos = cam->projectCamSpace(c);
+    float halfW = 0.5f * s.width  * cam->getFocal() / c.z;
+    float h = s.height * cam->getFocal() / c.z;
+    fillDepthQuad(&m_buf, (int)(pos.x - halfW), (int)(pos.y - h), (int)(pos.x + halfW), (int)pos.y, 1.0f / c.z, m_buf.current_color);
 }
 
 static void drawWorldLine(Framebuffer* buf, Vector3 from, Vector3 to, uint32_t color)
@@ -323,6 +335,28 @@ static void drawWorldLine(Framebuffer* buf, Vector3 from, Vector3 to, uint32_t c
 
     buf->setDrawColor(color);
     drawLine(buf, pa, pb);
+}
+
+void Renderer::renderSprites(const std::vector<Sprite3D> &sprites)
+{
+    Camera* cam = m_buf.activeCamera;
+
+    struct Item { const Sprite3D* s; Vector3 camSpacePos; };
+    std::vector<Item> items;
+
+    for (const auto& s : sprites)
+    {
+        Vector3 c = cam->toCamSpace(s.pos);
+        if (c.z < CLIP_NEAR) continue;
+        items.push_back({&s, c});
+    }
+
+    std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) { return a.camSpacePos.z > b.camSpacePos.z; });
+
+    for (const auto& it : items)
+    {
+        drawSprite(*it.s, it.camSpacePos);
+    }
 }
 
 void Renderer::renderDebugTraces(const std::vector<DebugTrace> &traces)

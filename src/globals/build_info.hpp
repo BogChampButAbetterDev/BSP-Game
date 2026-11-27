@@ -3,6 +3,7 @@
 #ifndef NDEBUG
     inline constexpr bool IS_DEBUG = true;
     inline constexpr bool IS_RELEASE = false;
+    #define LOG(x) std::cout << x << "\n";
 #else
     inline constexpr bool IS_DEBUG = false;
     inline constexpr bool IS_RELEASE = true;

@@ -15,6 +15,7 @@
 #include "engine/texture.hpp"
 #include "engine/sky.hpp"
 #include "engine/raycast.hpp"
+#include "engine/sprite.hpp"
 
 class Renderer
 {
@@ -23,6 +24,14 @@ public:
     Renderer(SDL_Renderer* ren) : m_ren(ren)
     {
         m_buf.create(m_ren);
+
+        Sprite3D jim;
+
+        jim.height = 2.0f;
+        jim.width = 2.0f;
+        jim.pos = { 0, 0.5, 8 };
+
+        m_sprites.push_back(jim);
     }
 
     void regLight(const DirectionalLight& light) { m_light = light; m_light.dir = m_light.dir.normalized();}
@@ -35,7 +44,8 @@ public:
     void renderMapDBGCLR(const Map& map);
     void render2DView(const Map& map);
     void endRender();
-
+    
+    void renderSprites(const std::vector<Sprite3D>& sprites);
     void renderDebugTraces(const std::vector<DebugTrace>& traces);
 
     Framebuffer* getBuf() { return &m_buf; }
@@ -60,6 +70,8 @@ private:
     
     DirectionalLight m_light;
 
+    std::vector<Sprite3D> m_sprites;
+
     int m_lastCamSector = -1;
 
     bool m_sectorDBG = true;
@@ -72,6 +84,8 @@ private:
 
     int  findCameraSector(const Map& map, Vector2 p);
     void drawFlats(const Map& map, int camSector);
+
+    void drawSprite(const Sprite3D& s, Vector3 c);
 
     static uint32_t hitColor(HitType t)
     {

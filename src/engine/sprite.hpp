@@ -3,6 +3,9 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
+#include "texture.hpp"
+#include "math/vectors.hpp"
+
 struct Sprite
 {
     Sprite() {}
@@ -55,4 +58,13 @@ struct Sprite
     
     SDL_FRect src = {0, 0, 0, 0};
     SDL_FRect dst = {0, 0, 0, 0};
+};
+
+struct Sprite3D
+{
+    Texture* tex = nullptr;
+    Vector3 pos = {};
+
+    int height = 0;
+    int width = 0;
 };

@@ -379,6 +379,22 @@ inline void fillTexturedPolygon(Framebuffer *buf, std::span<const ScreenVertex> 
             float v = p.vOverZ / p.invZ;
 
             buf->plotFree(x, y, scaleColorFixed(tex.sample(u, v), shade256));
+            buf->depth[y * DEF_WIN_WIDTH + x] = p.invZ;
+        }
+    }
+}
+
+inline void fillDepthQuad(Framebuffer* buf, int x0, int y0, int x1, int y1, float invZ, uint32_t color)
+{
+    x0 = std::max(x0, 0); x1 = std::min(x1, DEF_WIN_WIDTH);
+    y0 = std::max(y0, 0); y1 = std::min(y1, DEF_WIN_HEIGHT);
+
+    for (int y = y0; y < y1; y++)
+    {
+        for (int x = x0; x < x1; x++)
+        {
+            int i = y * DEF_WIN_WIDTH + x;
+            if (invZ > buf->depth[i]) buf->setPixelColor(x, y, color);
         }
     }
 }
