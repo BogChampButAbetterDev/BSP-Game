@@ -27,6 +27,7 @@ public:
 
         Sprite3D jim;
 
+        jim.texId = loadSpriteImage("assets/Textures/Bricks.png");
         jim.height = 2.0f;
         jim.width = 2.0f;
         jim.pos = { 0, 0.5, 8 };
@@ -36,6 +37,7 @@ public:
 
     void regLight(const DirectionalLight& light) { m_light = light; m_light.dir = m_light.dir.normalized();}
     void loadTextures(const std::vector<std::string>& paths);
+    int loadSpriteImage(const std::string& path);
     void loadSkyTexture(const std::string& path);
     void loadSkyFaces(const std::vector<std::string>& paths);
 
@@ -45,7 +47,7 @@ public:
     void render2DView(const Map& map);
     void endRender();
     
-    void renderSprites(const std::vector<Sprite3D>& sprites);
+    void renderSprites(const std::vector<Sprite3D>& sprites, const Map& map);
     void renderDebugTraces(const std::vector<DebugTrace>& traces);
 
     Framebuffer* getBuf() { return &m_buf; }
@@ -59,6 +61,7 @@ private:
 
     std::unique_ptr<std::vector<Wall>> m_renOrder = std::make_unique<std::vector<Wall>>();
     std::vector<Texture> m_textures;
+    std::vector<Texture> m_spriteTextures;
 
     Texture m_defaultTex;
     Texture m_defaultFloor;
@@ -85,7 +88,9 @@ private:
     int  findCameraSector(const Map& map, Vector2 p);
     void drawFlats(const Map& map, int camSector);
 
-    void drawSprite(const Sprite3D& s, Vector3 c);
+    void drawSprite(const Sprite3D& s, Vector3 c, float shade);
+
+    int sectorAt(const Map& map, Vector2 p) const;
 
     static uint32_t hitColor(HitType t)
     {

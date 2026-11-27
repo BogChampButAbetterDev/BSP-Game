@@ -399,6 +399,34 @@ inline void fillDepthQuad(Framebuffer* buf, int x0, int y0, int x1, int y1, floa
     }
 }
 
+inline void fillDepthQuadTex(Framebuffer* buf, int x0, int y0, int x1, int y1, float invZ, const Texture& tex, float shade)
+{
+    float w = float(x1 - x0), h = float(y1 - y0);
+    if (w <= 0.0f || h <= 0.0f) return;
+
+    const int ox = x0, oy = y0;
+
+    x0 = std::max(x0, 0); x1 = std::min(x1, DEF_WIN_WIDTH);
+    y0 = std::max(y0, 0); y1 = std::min(y1, DEF_WIN_HEIGHT);
+
+    uint32_t shade256 = shadeToFixed(shade);
+
+    for (int y = y0; y < y1; y++)
+    {
+        float v = (y + 0.5f - oy) / h;
+        for (int x = x0; x < x1; x++)
+        {
+            int i = y * DEF_WIN_WIDTH + x;
+            if (invZ <= buf->depth[i]) continue;
+
+            float u = (x + 0.5f - ox) / w;
+            uint32_t color = tex.sample(u, v);
+            if ((color >> 24) == 0) continue;
+            buf->pixels[i] = scaleColorFixed(color, shade256);
+        }
+    }
+}
+
 inline void fillWall(Framebuffer* buf, Wall wall)
 {
     Camera* cam = buf->activeCamera;

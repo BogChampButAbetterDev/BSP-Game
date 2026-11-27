@@ -3,7 +3,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
-#include "texture.hpp"
 #include "math/vectors.hpp"
 
 struct Sprite
@@ -52,7 +51,7 @@ struct Sprite
         SDL_RenderTexture(SDLRen, tex, &src, &dst);
     }
 
-    void clean() { SDL_DestroyTexture(tex); }
+    void clean() { SDL_DestroyTexture(tex); tex = nullptr; }
 
     SDL_Texture* tex = nullptr;
     
@@ -62,7 +61,7 @@ struct Sprite
 
 struct Sprite3D
 {
-    Texture* tex = nullptr;
+    int texId = -1;
     Vector3 pos = {};
 
     int height = 0;

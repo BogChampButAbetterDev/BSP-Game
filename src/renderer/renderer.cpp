@@ -36,6 +36,37 @@ void Renderer::loadTextures(const std::vector<std::string>& paths)
     }
 }
 
+int Renderer::loadSpriteImage(const std::string &path)
+{
+    m_defaultTex.width = 64;
+    m_defaultTex.height = 64;
+    m_defaultTex.pixels.resize(m_defaultTex.width * m_defaultTex.height);
+    m_defaultTex.genChecker();
+
+    SDL_Surface *loaded = SDL_LoadPNG(path.c_str());
+    if (!loaded)
+    {
+        std::cerr << "Texture loading failure: " << SDL_GetError() << " " << path << "\n";
+        m_spriteTextures.push_back(m_defaultTex);
+        return -1;
+    }
+
+    SDL_Surface *converted = SDL_ConvertSurface(loaded, SDL_PIXELFORMAT_ABGR8888);
+    SDL_DestroySurface(loaded);
+    Texture tex;
+    tex.width = converted->w;
+    tex.height = converted->h;
+    tex.pixels.resize(tex.width * tex.height);
+    for (int y = 0; y < tex.height; y++)
+    {
+        const uint8_t *src = (const uint8_t *)converted->pixels + y * converted->pitch;
+        std::memcpy(&tex.pixels[y * tex.width], src, tex.width * sizeof(uint32_t));
+    }   
+    m_spriteTextures.push_back(tex);
+    SDL_DestroySurface(converted);
+    return (int)m_spriteTextures.size() - 1;
+}
+
 void Renderer::loadSkyTexture(const std::string &p)
 {
     m_defaultSky.width = 64;
@@ -201,7 +232,7 @@ void Renderer::renderMap(const Map& map)
     m_buf.drawSector = -1;
     drawFlats(map, camSector);
 
-    renderSprites(m_sprites);
+    renderSprites(m_sprites, map);
 }
 
 int Renderer::findCameraSector(const Map& map, Vector2 p)
@@ -309,13 +340,31 @@ void Renderer::drawFlats(const Map& map, int camSector)
     }
 }
 
-void Renderer::drawSprite(const Sprite3D &s, Vector3 c)
+void Renderer::drawSprite(const Sprite3D &s, Vector3 c, float shade256)
 {
     Camera* cam = m_buf.activeCamera;
     Vector2 pos = cam->projectCamSpace(c);
     float halfW = 0.5f * s.width  * cam->getFocal() / c.z;
     float h = s.height * cam->getFocal() / c.z;
-    fillDepthQuad(&m_buf, (int)(pos.x - halfW), (int)(pos.y - h), (int)(pos.x + halfW), (int)pos.y, 1.0f / c.z, m_buf.current_color);
+    fillDepthQuadTex(&m_buf, (int)(pos.x - halfW), (int)(pos.y - h), (int)(pos.x + halfW), (int)pos.y, 1.0f / c.z, m_spriteTextures[s.texId], shade256);
+}
+
+int Renderer::sectorAt(const Map& map, Vector2 p) const
+{
+    std::vector<uint8_t> parity(map.sectors.size(), 0);
+    for (const Wall& w : map.walls)
+    {
+        if (w.backSect < 0 && w.doubleSided) continue;
+        Vector2 a = w.line.start, b = w.line.end;
+        if ((a.y > p.y) == (b.y > p.y)) continue;
+        float x = a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x);
+        if (x <= p.x) continue;
+        if (w.frontSect >= 0) parity[w.frontSect] ^= 1;
+        if (w.backSect  >= 0) parity[w.backSect]  ^= 1;
+    }
+    for (size_t i = 0; i < parity.size(); i++)
+        if (parity[i]) return (int)i;
+    return -1;
 }
 
 static void drawWorldLine(Framebuffer* buf, Vector3 from, Vector3 to, uint32_t color)
@@ -337,7 +386,7 @@ static void drawWorldLine(Framebuffer* buf, Vector3 from, Vector3 to, uint32_t c
     drawLine(buf, pa, pb);
 }
 
-void Renderer::renderSprites(const std::vector<Sprite3D> &sprites)
+void Renderer::renderSprites(const std::vector<Sprite3D> &sprites, const Map& map)
 {
     Camera* cam = m_buf.activeCamera;
 
@@ -355,7 +404,9 @@ void Renderer::renderSprites(const std::vector<Sprite3D> &sprites)
 
     for (const auto& it : items)
     {
-        drawSprite(*it.s, it.camSpacePos);
+        int sec = sectorAt(map, { it.s->pos.x, it.s->pos.z });
+        uint32_t light = (sec >= 0) ? shadeToFixed(map.sectors[sec].light) : shadeToFixed(1.0f);
+        drawSprite(*it.s, it.camSpacePos, light);
     }
 }
 
